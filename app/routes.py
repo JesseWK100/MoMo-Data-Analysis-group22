@@ -48,7 +48,7 @@ def get_transactions():
     rows = cursor.execute(query, params).fetchall()
     conn.close()
 
-    # Format the response to include direction
+    
     transactions = []
     for row in rows:
         tx = format_transaction_row(row)
