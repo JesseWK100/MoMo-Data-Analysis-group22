@@ -442,7 +442,6 @@
         </div>
     </div>
 
-    <!-- Transaction Detail Modal -->
     <div id="transactionModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
@@ -452,7 +451,6 @@
     </div>
 
     <script>
-        // Sample data - In real implementation, this would come from your API
         let allTransactions = [
             {
                 id: 1,
@@ -539,7 +537,6 @@
         let filteredTransactions = [...allTransactions];
         let charts = {};
 
-        // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             showLoading(true);
             setTimeout(() => {
@@ -642,7 +639,7 @@
 
             const monthlyData = {};
             filteredTransactions.forEach(t => {
-                const monthKey = t.date.substring(0, 7); // YYYY-MM
+                const monthKey = t.date.substring(0, 7);
                 if (!monthlyData[monthKey]) {
                     monthlyData[monthKey] = { count: 0, amount: 0 };
                 }
@@ -788,7 +785,7 @@
             const tbody = document.getElementById('transactionsTableBody');
             tbody.innerHTML = '';
 
-            const displayTransactions = filteredTransactions.slice(0, 50); // Show max 50 transactions
+            const displayTransactions = filteredTransactions.slice(0, 50);
 
             displayTransactions.forEach(transaction => {
                 const row = document.createElement('tr');
@@ -894,7 +891,6 @@
             document.getElementById('transactionModal').style.display = 'none';
         }
 
-        // Close modal when clicking outside of it
         window.onclick = function(event) {
             const modal = document.getElementById('transactionModal');
             if (event.target === modal) {
@@ -902,14 +898,12 @@
             }
         }
 
-        // Add keyboard shortcut for search
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 applyFilters();
             }
         });
 
-        // Auto-apply filters when typing (debounced)
         let searchTimeout;
         document.getElementById('searchInput').addEventListener('input', function() {
             clearTimeout(searchTimeout);
@@ -918,7 +912,6 @@
             }, 500);
         });
 
-        // Export functionality
         function exportToCSV() {
             const headers = ['Date', 'Type', 'Sender/Recipient', 'Amount', 'Description', 'Reference', 'Balance'];
             const csvContent = [
@@ -945,7 +938,6 @@
             window.URL.revokeObjectURL(url);
         }
 
-        // Add export button functionality (you can add this button to the UI if needed)
         function addExportButton() {
             const controlsGrid = document.querySelector('.controls-grid');
             const exportGroup = document.createElement('div');
@@ -954,23 +946,14 @@
             controlsGrid.appendChild(exportGroup);
         }
 
-        // Call this if you want to add the export button
-        // addExportButton();
-
-        // Real-time clock
         function updateClock() {
             const now = new Date();
             const timeString = now.toLocaleTimeString();
             const dateString = now.toLocaleDateString();
-            
-            // You can add a clock element to the header if desired
-            // document.getElementById('currentTime').textContent = `${dateString} ${timeString}`;
         }
 
-        // Update clock every second
         setInterval(updateClock, 1000);
 
-        // Initialize tooltips and animations
         function initializeAnimations() {
             const cards = document.querySelectorAll('.stat-card, .chart-container, .transactions-table');
             cards.forEach((card, index) => {
@@ -984,13 +967,10 @@
             });
         }
 
-        // Call animations after dashboard loads
         setTimeout(initializeAnimations, 1600);
 
-        // API Integration functions (for when you connect to your backend)
         async function fetchTransactionsFromAPI() {
             try {
-                // Replace with your actual API endpoint
                 const response = await fetch('/api/transactions');
                 const data = await response.json();
                 allTransactions = data.transactions || [];
@@ -1001,17 +981,11 @@
                 updateTransactionsTable();
             } catch (error) {
                 console.error('Error fetching transactions:', error);
-                // Fall back to sample data
             }
         }
 
-        // Uncomment this line when you have your backend API ready
-        // fetchTransactionsFromAPI();
-
-        // Refresh data periodically (every 5 minutes)
         setInterval(() => {
-            // fetchTransactionsFromAPI();
         }, 300000);
     </script>
 </body>
-</html>
+</html> 
