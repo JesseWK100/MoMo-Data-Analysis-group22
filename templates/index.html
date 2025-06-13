@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoMo Dashboard - Do More with MoMo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        /* Header */
+        .header {
+            background: #198536;
+            padding: 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            height: 80px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: #ffcc00;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #1e3a5f;
+        }
+
+        .logo-text {
+            color: #ffcc00;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .logo-sub {
+            color: #fff;
+            font-size: 0.8rem;
+            margin-top: -5px;
+        }
+
+        .dashboard-title {
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: #fff;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: #ffcc00;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #1e3a5f;
+        }
+
+        /* Dashboard Content */
+        .dashboard {
+            margin-top: 80px;
+            padding: 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header {
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-header h1 {
+            color: #1e3a5f;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .action-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            border-top: 3px solid #198536;
+            cursor: pointer;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .action-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #198536, #ffcc00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .action-card h3 {
+            color: #1e3a5f;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .action-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Balance Card */
+        .balance-card {
+            background: linear-gradient(135deg, #198536, #1e3a5f);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .balance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .balance-title {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .balance-amount {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .balance-currency {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        /* Transaction History */
+        .transaction-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .transaction-icon.send {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .transaction-icon.receive {
+            background: #e8f5e8;
+            color: #4caf50;
+        }
+
+        .transaction-icon.bill {
+            background: #fff3e0;
+            color: #ff9800;
+        }
+
+        .transaction-details h4 {
+            color: #1e3a5f;
+            margin-bottom: 0.2rem;
+        }
+
+        .transaction-details p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            color: #1e3a5f;
+        }
+
+        /* Stats Card */
+        .stats-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #198536;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Notifications */
+        .notifications-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-icon {
+            width: 35px;
+            height: 35px;
+            background: #e3f2fd;
+            color: #2196f3;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .notification-content h4 {
+            color: #1e3a5f;
+            font-size: 0.95rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .notification-content p {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 1rem;
+            }
+            
+            .dashboard {
+                padding: 1rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .balance-amount {
+                font-size: 2rem;
+            }
+            
+            .user-profile {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">△</div>
+                <div>
+                    <div class="logo-text">MoMo</div>
+                    <div class="logo-sub">from MTN</div>
+                </div>
+            </div>
+            <div class="dashboard-title">Dashboard</div>
+            <div class="user-profile">
+                <div class="user-avatar">JD</div>
+                <span>John Doe</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <main class="dashboard">
+        <div class="container">
+            <div class="dashboard-header">
+                <h1>Welcome back, John!</h1>
+                <p>Here's what's happening with your MoMo account today.</p>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <div class="action-card">
+                    <div class="action-icon">💸</div>
+                    <h3>Send Money</h3>
+                    <p>Transfer funds instantly</p>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">💰</div>
+                    <h3>Receive Money</h3>
+                    <p>Get paid easily</p>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">📱</div>
+                    <h3>Buy Airtime</h3>
+                    <p>Top up your phone</p>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">💡</div>
+                    <h3>Pay Bills</h3>
+                    <p>Utilities & services</p>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">🏪</div>
+                    <h3>Pay Merchant</h3>
+                    <p>Shop & pay online</p>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">💳</div>
+                    <h3>Savings</h3>
+                    <p>Save for the future</p>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+                <div class="main-content">
+                    <!-- Balance Card -->
+                    <div class="balance-card">
+                        <div class="balance-header">
+                            <div class="balance-title">Account Balance</div>
+                            <div>👁️</div>
+                        </div>
+                        <div class="balance-amount">KES 45,280</div>
+                        <div class="balance-currency">Kenyan Shillings</div>
+                    </div>
+
+                    <!-- Transaction History -->
+                    <div class="transaction-card">
+                        <div class="transaction-header">
+                            <h3>Recent Transactions</h3>
+                            <a href="#" style="color: #198536; text-decoration: none;">View All</a>
+                        </div>
+                        <div class="transaction-item">
+                            <div class="transaction-info">
+                                <div class="transaction-icon send">↗️</div>
+                                <div class="transaction-details">
+                                    <h4>Sent to Mary Wanjiku</h4>
+                                    <p>Today, 2:30 PM</p>
+                                </div>
+                            </div>
+                            <div class="transaction-amount">-KES 2,500</div>
+                        </div>
+                        <div class="transaction-item">
+                            <div class="transaction-info">
+                                <div class="transaction-icon receive">↙️</div>
+                                <div class="transaction-details">
+                                    <h4>Received from Peter Kamau</h4>
+                                    <p>Yesterday, 4:15 PM</p>
+                                </div>
+                            </div>
+                            <div class="transaction-amount">+KES 8,000</div>
+                        </div>
+                        <div class="transaction-item">
+                            <div class="transaction-info">
+                                <div class="transaction-icon bill">💡</div>
+                                <div class="transaction-details">
+                                    <h4>KPLC Bill Payment</h4>
+                                    <p>Yesterday, 10:00 AM</p>
+                                </div>
+                            </div>
+                            <div class="transaction-amount">-KES 3,200</div>
+                        </div>
+                        <div class="transaction-item">
+                            <div class="transaction-info">
+                                <div class="transaction-icon send">📱</div>
+                                <div class="transaction-details">
+                                    <h4>Airtime Purchase</h4>
+                                    <p>2 days ago, 9:20 AM</p>
+                                </div>
+                            </div>
+                            <div class="transaction-amount">-KES 500</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar">
+                    <!-- Stats Card -->
+                    <div class="stats-card">
+                        <h3 style="margin-bottom: 1.5rem; color: #1e3a5f;">This Month</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">24</div>
+                                <div class="stat-label">Transactions</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">KES 12K</div>
+                                <div class="stat-label">Spent</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">KES 25K</div>
+                                <div class="stat-label">Received</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">5</div>
+                                <div class="stat-label">Bill Payments</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="notifications-card">
+                        <h3 style="margin-bottom: 1.5rem; color: #1e3a5f;">Notifications</h3>
+                        <div class="notification-item">
+                            <div class="notification-icon">🔔</div>
+                            <div class="notification-content">
+                                <h4>Transaction Successful</h4>
+                                <p>Money sent to Mary Wanjiku</p>
+                            </div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-icon">🎉</div>
+                            <div class="notification-content">
+                                <h4>Cashback Earned</h4>
+                                <p>You earned KES 50 cashback</p>
+                            </div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-icon">📱</div>
+                            <div class="notification-content">
+                                <h4>Bill Reminder</h4>
+                                <p>Your water bill is due tomorrow</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Add click handlers for action cards
+        document.querySelectorAll('.action-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const action = this.querySelector('h3').textContent;
+                alert(`${action} feature will be implemented here`);
+            });
+        });
+
+        // Add smooth animations on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.action-card, .balance-card, .transaction-card, .stats-card, .notifications-card');
+            
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'all 0.6s ease';
+                
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>
