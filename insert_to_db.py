@@ -31,4 +31,3 @@ conn.commit()
 conn.close()
 
 print("Database created and data inserted.")
-
