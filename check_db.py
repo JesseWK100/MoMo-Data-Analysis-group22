@@ -13,4 +13,3 @@ rows = cursor.fetchall()
 print("Sample records:", rows)
 
 conn.close()
-
