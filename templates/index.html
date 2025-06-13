@@ -279,6 +279,11 @@
             color: #ff9800;
         }
 
+        .transaction-icon.airtime {
+            background: #e3f2fd;
+            color: #2196f3;
+        }
+
         .transaction-details h4 {
             color: #1e3a5f;
             margin-bottom: 0.2rem;
@@ -292,6 +297,49 @@
         .transaction-amount {
             font-weight: bold;
             color: #1e3a5f;
+        }
+
+        .transaction-amount.negative {
+            color: #f44336;
+        }
+
+        .transaction-amount.positive {
+            color: #4caf50;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #198536;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            text-align: center;
         }
 
         /* Stats Card */
@@ -479,45 +527,10 @@
                             <h3>Recent Transactions</h3>
                             <a href="#" style="color: #198536; text-decoration: none;">View All</a>
                         </div>
-                        <div class="transaction-item">
-                            <div class="transaction-info">
-                                <div class="transaction-icon send">↗️</div>
-                                <div class="transaction-details">
-                                    <h4>Sent to Mary Wanjiku</h4>
-                                    <p>Today, 2:30 PM</p>
-                                </div>
-                            </div>
-                            <div class="transaction-amount">-KES 2,500</div>
-                        </div>
-                        <div class="transaction-item">
-                            <div class="transaction-info">
-                                <div class="transaction-icon receive">↙️</div>
-                                <div class="transaction-details">
-                                    <h4>Received from Peter Kamau</h4>
-                                    <p>Yesterday, 4:15 PM</p>
-                                </div>
-                            </div>
-                            <div class="transaction-amount">+KES 8,000</div>
-                        </div>
-                        <div class="transaction-item">
-                            <div class="transaction-info">
-                                <div class="transaction-icon bill">💡</div>
-                                <div class="transaction-details">
-                                    <h4>KPLC Bill Payment</h4>
-                                    <p>Yesterday, 10:00 AM</p>
-                                </div>
-                            </div>
-                            <div class="transaction-amount">-KES 3,200</div>
-                        </div>
-                        <div class="transaction-item">
-                            <div class="transaction-info">
-                                <div class="transaction-icon send">📱</div>
-                                <div class="transaction-details">
-                                    <h4>Airtime Purchase</h4>
-                                    <p>2 days ago, 9:20 AM</p>
-                                </div>
-                            </div>
-                            <div class="transaction-amount">-KES 500</div>
+                        
+                        <!-- Backend Transaction Container -->
+                        <div id="transactions">
+                            <div class="loading">Loading transactions...</div>
                         </div>
                     </div>
                 </div>
@@ -577,6 +590,111 @@
     </main>
 
     <script>
+        // Function to get transaction icon based on type
+        function getTransactionIcon(type) {
+            const iconMap = {
+                'send': { class: 'send', icon: '↗️' },
+                'receive': { class: 'receive', icon: '↙️' },
+                'bill': { class: 'bill', icon: '💡' },
+                'airtime': { class: 'airtime', icon: '📱' },
+                'merchant': { class: 'bill', icon: '🏪' },
+                'savings': { class: 'receive', icon: '💳' }
+            };
+            return iconMap[type.toLowerCase()] || { class: 'send', icon: '💸' };
+        }
+
+        // Function to format amount with proper styling
+        function formatAmount(amount, type) {
+            const isNegative = amount < 0 || ['send', 'bill', 'airtime', 'merchant'].includes(type.toLowerCase());
+            const formattedAmount = Math.abs(amount).toLocaleString('en-KE', {
+                style: 'currency',
+                currency: 'KES',
+                minimumFractionDigits: 0
+            });
+            
+            return {
+                amount: (isNegative ? '-' : '+') + formattedAmount,
+                class: isNegative ? 'negative' : 'positive'
+            };
+        }
+
+        // Function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) {
+                return `Today, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+            } else if (diffDays === 1) {
+                return `Yesterday, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+            } else if (diffDays < 7) {
+                return `${diffDays} days ago, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+            } else {
+                return date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+        }
+
+        // Fetch transactions from backend
+        fetch('http://127.0.0.1:5000/api/transactions')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Fetched transactions:", data);
+                
+                const container = document.getElementById('transactions');
+                container.innerHTML = ''; // Clear loading message
+                
+                if (data.length === 0) {
+                    container.innerHTML = '<div class="loading">No transactions found</div>';
+                    return;
+                }
+                
+                // Display only the first 5 transactions for the dashboard
+                const recentTransactions = data.slice(0, 5);
+                
+                recentTransactions.forEach(txn => {
+                    const iconInfo = getTransactionIcon(txn.type);
+                    const amountInfo = formatAmount(txn.amount, txn.type);
+                    
+                    const transactionItem = document.createElement('div');
+                    transactionItem.className = 'transaction-item';
+                    
+                    transactionItem.innerHTML = `
+                        <div class="transaction-info">
+                            <div class="transaction-icon ${iconInfo.class}">${iconInfo.icon}</div>
+                            <div class="transaction-details">
+                                <h4>${txn.description || txn.type.charAt(0).toUpperCase() + txn.type.slice(1)}</h4>
+                                <p>${formatDate(txn.date)}</p>
+                            </div>
+                        </div>
+                        <div class="transaction-amount ${amountInfo.class}">${amountInfo.amount}</div>
+                    `;
+                    
+                    container.appendChild(transactionItem);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching transactions:', error);
+                const container = document.getElementById('transactions');
+                container.innerHTML = `
+                    <div class="error">
+                        Failed to load transactions. Please check if the backend server is running.
+                        <br><small>Error: ${error.message}</small>
+                    </div>
+                `;
+            });
+
         // Add click handlers for action cards
         document.querySelectorAll('.action-card').forEach(card => {
             card.addEventListener('click', function() {
