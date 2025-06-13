@@ -5,13 +5,28 @@ def create_db():
     cursor = conn.cursor()
 
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS transactions (
+        CREATE TABLE IF NOT EXISTS transaction_types (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            type TEXT,
-            receiver TEXT,
+            name TEXT UNIQUE
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS transactions (
+            sms_id TEXT PRIMARY KEY,
+            raw_body TEXT,
+            tx_type_id INTEGER,
             amount INTEGER,
-            date TEXT,
-            raw_body TEXT
+            currency TEXT,
+            fee INTEGER,
+            balance_after INTEGER,
+            tx_timestamp TEXT,
+            from_party TEXT,
+            to_party TEXT,
+            momo_tx_id TEXT,
+            agent_id TEXT,
+            extra_info TEXT,
+            FOREIGN KEY(tx_type_id) REFERENCES transaction_types(id)
         )
     ''')
 

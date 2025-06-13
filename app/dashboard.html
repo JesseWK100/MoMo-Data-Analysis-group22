@@ -451,109 +451,26 @@
     </div>
 
     <script>
-        let allTransactions = [
-            {
-                id: 1,
-                date: '2024-06-10',
-                type: 'incoming',
-                sender: 'JOHN DOE',
-                amount: 50000,
-                description: 'Money received from JOHN DOE',
-                reference: 'TXN001234567',
-                balance: 125000
-            },
-            {
-                id: 2,
-                date: '2024-06-09',
-                type: 'payment',
-                sender: 'SUPERMARKET',
-                amount: -25000,
-                description: 'Payment to SUPERMARKET',
-                reference: 'TXN001234568',
-                balance: 75000
-            },
-            {
-                id: 3,
-                date: '2024-06-08',
-                type: 'airtime',
-                sender: 'MTN',
-                amount: -5000,
-                description: 'Airtime purchase',
-                reference: 'TXN001234569',
-                balance: 100000
-            },
-            {
-                id: 4,
-                date: '2024-06-07',
-                type: 'withdrawal',
-                sender: 'MTN AGENT',
-                amount: -30000,
-                description: 'Cash withdrawal from agent',
-                reference: 'TXN001234570',
-                balance: 105000
-            },
-            {
-                id: 5,
-                date: '2024-06-06',
-                type: 'transfer',
-                sender: 'JANE SMITH',
-                amount: -15000,
-                description: 'Transfer to JANE SMITH',
-                reference: 'TXN001234571',
-                balance: 135000
-            },
-            {
-                id: 6,
-                date: '2024-05-15',
-                type: 'incoming',
-                sender: 'EMPLOYER',
-                amount: 200000,
-                description: 'Salary payment',
-                reference: 'TXN001234572',
-                balance: 150000
-            },
-            {
-                id: 7,
-                date: '2024-05-10',
-                type: 'payment',
-                sender: 'UTILITY COMPANY',
-                amount: -45000,
-                description: 'Electricity bill payment',
-                reference: 'TXN001234573',
-                balance: 50000
-            },
-            {
-                id: 8,
-                date: '2024-04-20',
-                type: 'incoming',
-                sender: 'BUSINESS PARTNER',
-                amount: 150000,
-                description: 'Business payment received',
-                reference: 'TXN001234574',
-                balance: 95000
+        const API_BASE_URL = 'http://localhost:5000';
+        let transactions = [];
+        let filteredTransactions = [];
+        let typeChart, volumeChart, distributionChart;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await fetchTransactionTypes();
+                await fetchTransactions();
+                updateStats();
+                createCharts();
+                updateTransactionsTable();
+                initializeAnimations();
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
             }
-        ];
-
-        let filteredTransactions = [...allTransactions];
-        let charts = {};
-
-        document.addEventListener('DOMContentLoaded', function() {
-            showLoading(true);
-            setTimeout(() => {
-                initializeDashboard();
-                showLoading(false);
-            }, 1500);
         });
 
         function showLoading(show) {
             document.getElementById('loading').style.display = show ? 'block' : 'none';
-        }
-
-        function initializeDashboard() {
-            updateStats();
-            createCharts();
-            updateTransactionsTable();
-            setDefaultDates();
         }
 
         function setDefaultDates() {
@@ -592,8 +509,8 @@
         function createTypeChart() {
             const ctx = document.getElementById('typeChart').getContext('2d');
             
-            if (charts.typeChart) {
-                charts.typeChart.destroy();
+            if (typeChart) {
+                typeChart.destroy();
             }
 
             const typeCounts = {};
@@ -606,10 +523,11 @@
                 payment: '#ffc107',
                 airtime: '#007bff',
                 withdrawal: '#dc3545',
-                transfer: '#6c757d'
+                transfer: '#6c757d',
+                deposit: '#17a2b8'
             };
 
-            charts.typeChart = new Chart(ctx, {
+            typeChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: Object.keys(typeCounts).map(type => type.charAt(0).toUpperCase() + type.slice(1)),
@@ -633,8 +551,8 @@
         function createMonthlyChart() {
             const ctx = document.getElementById('monthlyChart').getContext('2d');
             
-            if (charts.monthlyChart) {
-                charts.monthlyChart.destroy();
+            if (volumeChart) {
+                volumeChart.destroy();
             }
 
             const monthlyData = {};
@@ -649,7 +567,7 @@
 
             const sortedMonths = Object.keys(monthlyData).sort();
 
-            charts.monthlyChart = new Chart(ctx, {
+            volumeChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: sortedMonths,
@@ -692,8 +610,8 @@
         function createAmountChart() {
             const ctx = document.getElementById('amountChart').getContext('2d');
             
-            if (charts.amountChart) {
-                charts.amountChart.destroy();
+            if (distributionChart) {
+                distributionChart.destroy();
             }
 
             const amounts = filteredTransactions.map(t => Math.abs(t.amount));
@@ -704,7 +622,7 @@
                 '100K+': amounts.filter(a => a >= 100000).length
             };
 
-            charts.amountChart = new Chart(ctx, {
+            distributionChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: Object.keys(ranges),
@@ -733,8 +651,8 @@
         function createDailyChart() {
             const ctx = document.getElementById('dailyChart').getContext('2d');
             
-            if (charts.dailyChart) {
-                charts.dailyChart.destroy();
+            if (dailyChart) {
+                dailyChart.destroy();
             }
 
             const dailyData = {};
@@ -746,7 +664,7 @@
             const sortedDates = Object.keys(dailyData).sort();
             const last30Days = sortedDates.slice(-30);
 
-            charts.dailyChart = new Chart(ctx, {
+            dailyChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: last30Days,
@@ -792,12 +710,12 @@
                 row.innerHTML = `
                     <td>${formatDate(transaction.date)}</td>
                     <td><span class="transaction-type type-${transaction.type}">${transaction.type}</span></td>
-                    <td>${transaction.sender}</td>
+                    <td>${transaction.receiver || 'N/A'}</td>
                     <td class="${transaction.amount >= 0 ? 'amount-positive' : 'amount-negative'}">
                         RWF ${Math.abs(transaction.amount).toLocaleString()}
                     </td>
-                    <td>${transaction.description}</td>
-                    <td><button class="btn" onclick="showTransactionDetails(${transaction.id})" style="padding: 5px 10px; font-size: 12px;">View</button></td>
+                    <td>${transaction.raw_body || 'N/A'}</td>
+                    <td><button class="btn" onclick="showTransactionDetails('${transaction.id}')" style="padding: 5px 10px; font-size: 12px;">View</button></td>
                 `;
                 tbody.appendChild(row);
             });
@@ -812,39 +730,18 @@
             });
         }
 
-        function applyFilters() {
+        async function applyFilters() {
             showLoading(true);
-            
-            setTimeout(() => {
-                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-                const typeFilter = document.getElementById('typeFilter').value;
-                const dateFrom = document.getElementById('dateFrom').value;
-                const dateTo = document.getElementById('dateTo').value;
-                const minAmount = parseFloat(document.getElementById('minAmount').value) || 0;
-                const maxAmount = parseFloat(document.getElementById('maxAmount').value) || Infinity;
-
-                filteredTransactions = allTransactions.filter(transaction => {
-                    const matchesSearch = !searchTerm || 
-                        transaction.sender.toLowerCase().includes(searchTerm) ||
-                        transaction.description.toLowerCase().includes(searchTerm) ||
-                        transaction.amount.toString().includes(searchTerm);
-                    
-                    const matchesType = !typeFilter || transaction.type === typeFilter;
-                    
-                    const matchesDateFrom = !dateFrom || transaction.date >= dateFrom;
-                    const matchesDateTo = !dateTo || transaction.date <= dateTo;
-                    
-                    const amount = Math.abs(transaction.amount);
-                    const matchesAmount = amount >= minAmount && amount <= maxAmount;
-
-                    return matchesSearch && matchesType && matchesDateFrom && matchesDateTo && matchesAmount;
-                });
-
+            try {
+                await fetchTransactions();
                 updateStats();
                 createCharts();
                 updateTransactionsTable();
+            } catch (error) {
+                console.error('Error applying filters:', error);
+            } finally {
                 showLoading(false);
-            }, 500);
+            }
         }
 
         function resetFilters() {
@@ -855,14 +752,14 @@
             document.getElementById('minAmount').value = '';
             document.getElementById('maxAmount').value = '';
             
-            filteredTransactions = [...allTransactions];
+            filteredTransactions = [...transactions];
             updateStats();
             createCharts();
             updateTransactionsTable();
         }
 
         function showTransactionDetails(transactionId) {
-            const transaction = allTransactions.find(t => t.id === transactionId);
+            const transaction = transactions.find(t => t.id === transactionId);
             if (!transaction) return;
 
             const modal = document.getElementById('transactionModal');
@@ -870,17 +767,16 @@
             
             details.innerHTML = `
                 <div style="display: grid; gap: 15px;">
-                    <div><strong>Transaction ID:</strong> ${transaction.reference}</div>
+                    <div><strong>Transaction ID:</strong> ${transaction.id}</div>
                     <div><strong>Date:</strong> ${formatDate(transaction.date)}</div>
                     <div><strong>Type:</strong> <span class="transaction-type type-${transaction.type}">${transaction.type}</span></div>
-                    <div><strong>Sender/Recipient:</strong> ${transaction.sender}</div>
+                    <div><strong>Sender/Recipient:</strong> ${transaction.receiver || 'N/A'}</div>
                     <div><strong>Amount:</strong> 
                         <span class="${transaction.amount >= 0 ? 'amount-positive' : 'amount-negative'}">
                             RWF ${Math.abs(transaction.amount).toLocaleString()}
                         </span>
                     </div>
-                    <div><strong>Description:</strong> ${transaction.description}</div>
-                    <div><strong>Balance After:</strong> RWF ${transaction.balance.toLocaleString()}</div>
+                    <div><strong>Description:</strong> ${transaction.raw_body || 'N/A'}</div>
                 </div>
             `;
             
@@ -913,17 +809,15 @@
         });
 
         function exportToCSV() {
-            const headers = ['Date', 'Type', 'Sender/Recipient', 'Amount', 'Description', 'Reference', 'Balance'];
+            const headers = ['Date', 'Type', 'Sender/Recipient', 'Amount', 'Description'];
             const csvContent = [
                 headers.join(','),
                 ...filteredTransactions.map(t => [
                     t.date,
                     t.type,
-                    `"${t.sender}"`,
+                    `"${t.receiver || 'N/A'}"`,
                     t.amount,
-                    `"${t.description}"`,
-                    t.reference,
-                    t.balance
+                    `"${t.raw_body || 'N/A'}"`
                 ].join(','))
             ].join('\n');
 
@@ -969,23 +863,88 @@
 
         setTimeout(initializeAnimations, 1600);
 
-        async function fetchTransactionsFromAPI() {
+        async function fetchTransactions() {
             try {
-                const response = await fetch('/api/transactions');
+                const response = await fetch(`${API_BASE_URL}/api/transactions?` + new URLSearchParams({
+                    dateFrom: document.getElementById('dateFrom').value,
+                    dateTo: document.getElementById('dateTo').value,
+                    amountThreshold: document.getElementById('minAmount').value,
+                    keyword: document.getElementById('searchInput').value,
+                    type: document.getElementById('typeFilter').value
+                }));
                 const data = await response.json();
-                allTransactions = data.transactions || [];
-                filteredTransactions = [...allTransactions];
-                
-                updateStats();
-                createCharts();
-                updateTransactionsTable();
+                transactions = data;
+                filteredTransactions = [...transactions];
             } catch (error) {
                 console.error('Error fetching transactions:', error);
             }
         }
 
-        setInterval(() => {
-        }, 300000);
+        async function fetchTransactionTypes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/types`);
+                const types = await response.json();
+                const typeFilter = document.getElementById('typeFilter');
+                typeFilter.innerHTML = '<option value="">All Types</option>';
+                types.forEach(type => {
+                    typeFilter.innerHTML += `<option value="${type}">${type}</option>`;
+                });
+            } catch (error) {
+                console.error('Error fetching transaction types:', error);
+            }
+        }
+
+        async function fetchTransactionVolume() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/transactions/volume?` + new URLSearchParams({
+                    start_date: document.getElementById('dateFrom').value,
+                    end_date: document.getElementById('dateTo').value,
+                    type: document.getElementById('typeFilter').value
+                }));
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching transaction volume:', error);
+                return { labels: [], values: [] };
+            }
+        }
+
+        async function fetchMonthlyTransactions() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/transactions/monthly?` + new URLSearchParams({
+                    start_date: document.getElementById('dateFrom').value,
+                    end_date: document.getElementById('dateTo').value,
+                    type: document.getElementById('typeFilter').value
+                }));
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching monthly transactions:', error);
+                return { labels: [], values: [] };
+            }
+        }
+
+        async function fetchTransactionDistribution() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/transactions/distribution?` + new URLSearchParams({
+                    start_date: document.getElementById('dateFrom').value,
+                    end_date: document.getElementById('dateTo').value,
+                    type: document.getElementById('typeFilter').value
+                }));
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching transaction distribution:', error);
+                return { incoming: 0, outgoing: 0 };
+            }
+        }
+
+        async function fetchSummary() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/summary`);
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching summary:', error);
+                return { types: [], counts: [], totals: [] };
+            }
+        }
     </script>
 </body>
 </html> 

@@ -1,13 +1,14 @@
-from flask import Blueprint, jsonify, request, render_template
+from flask import Blueprint, jsonify, request, render_template, send_from_directory
 from .models import get_db_connection
 from .utils import format_transaction_row
 from datetime import datetime, timedelta
+import os
 
 api = Blueprint('api', __name__)
 
 @api.route('/')
 def dashboard():
-    return render_template('dashboard.html')
+    return send_from_directory(os.path.dirname(__file__), 'dashboard.html')
 
 @api.route('/api/transactions', methods=['GET'])
 def get_transactions():
@@ -21,38 +22,49 @@ def get_transactions():
     keyword = request.args.get('keyword')
     tx_type = request.args.get('type')
 
-    query = "SELECT * FROM transactions WHERE 1=1"
+    query = """
+        SELECT t.*, tt.name as type_name 
+        FROM transactions t
+        JOIN transaction_types tt ON t.tx_type_id = tt.id
+        WHERE 1=1
+    """
     params = []
 
     if date_from:
-        query += " AND date >= ?"
+        query += " AND t.tx_timestamp >= ?"
         params.append(date_from)
 
     if date_to:
-        query += " AND date <= ?"
+        query += " AND t.tx_timestamp <= ?"
         params.append(date_to)
 
     if min_amount:
-        query += " AND amount >= ?"
+        query += " AND t.amount >= ?"
         params.append(float(min_amount))
 
     if keyword:
-        query += " AND (raw_body LIKE ? OR receiver LIKE ?)"
+        query += " AND (t.raw_body LIKE ? OR t.to_party LIKE ? OR t.from_party LIKE ?)"
         keyword_param = f"%{keyword}%"
-        params.extend([keyword_param, keyword_param])
+        params.extend([keyword_param, keyword_param, keyword_param])
 
     if tx_type:
-        query += " AND type = ?"
+        query += " AND tt.name = ?"
         params.append(tx_type)
 
     rows = cursor.execute(query, params).fetchall()
     conn.close()
 
-    
     transactions = []
     for row in rows:
-        tx = format_transaction_row(row)
-        tx['direction'] = 'in' if tx['amount'] > 0 else 'out'
+        tx = {
+            'id': row['sms_id'],
+            'type': row['type_name'],
+            'amount': row['amount'],
+            'date': row['tx_timestamp'],
+            'receiver': row['to_party'] or row['from_party'],
+            'raw_body': row['raw_body'],
+            'direction': 'in' if row['amount'] > 0 else 'out'
+        }
         transactions.append(tx)
 
     return jsonify(transactions)
@@ -62,10 +74,10 @@ def get_transaction_types():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    types = cursor.execute('SELECT DISTINCT type FROM transactions ORDER BY type').fetchall()
+    types = cursor.execute('SELECT name FROM transaction_types ORDER BY name').fetchall()
     conn.close()
     
-    return jsonify([row['type'] for row in types])
+    return jsonify([row['name'] for row in types])
 
 @api.route('/api/transactions/volume', methods=['GET'])
 def get_transaction_volume():
@@ -73,8 +85,9 @@ def get_transaction_volume():
     cursor = conn.cursor()
     
     query = '''
-        SELECT type, COUNT(*) as count
-        FROM transactions
+        SELECT tt.name as type, COUNT(*) as count
+        FROM transactions t
+        JOIN transaction_types tt ON t.tx_type_id = tt.id
         WHERE 1=1
     '''
     params = []
@@ -84,18 +97,18 @@ def get_transaction_volume():
     tx_type = request.args.get('type')
     
     if date_from:
-        query += " AND date >= ?"
+        query += " AND t.tx_timestamp >= ?"
         params.append(date_from)
     
     if date_to:
-        query += " AND date <= ?"
+        query += " AND t.tx_timestamp <= ?"
         params.append(date_to)
     
     if tx_type:
-        query += " AND type = ?"
+        query += " AND tt.name = ?"
         params.append(tx_type)
     
-    query += " GROUP BY type"
+    query += " GROUP BY tt.name"
     
     results = cursor.execute(query, params).fetchall()
     conn.close()
@@ -111,8 +124,9 @@ def get_monthly_transactions():
     cursor = conn.cursor()
     
     query = '''
-        SELECT strftime('%Y-%m', date) as month, COUNT(*) as count
-        FROM transactions
+        SELECT strftime('%Y-%m', t.tx_timestamp) as month, COUNT(*) as count
+        FROM transactions t
+        JOIN transaction_types tt ON t.tx_type_id = tt.id
         WHERE 1=1
     '''
     params = []
@@ -122,15 +136,15 @@ def get_monthly_transactions():
     tx_type = request.args.get('type')
     
     if date_from:
-        query += " AND date >= ?"
+        query += " AND t.tx_timestamp >= ?"
         params.append(date_from)
     
     if date_to:
-        query += " AND date <= ?"
+        query += " AND t.tx_timestamp <= ?"
         params.append(date_to)
     
     if tx_type:
-        query += " AND type = ?"
+        query += " AND tt.name = ?"
         params.append(tx_type)
     
     query += " GROUP BY month ORDER BY month"
@@ -151,11 +165,12 @@ def get_transaction_distribution():
     query = '''
         SELECT 
             CASE 
-                WHEN amount > 0 THEN 'incoming'
+                WHEN t.amount > 0 THEN 'incoming'
                 ELSE 'outgoing'
             END as direction,
             COUNT(*) as count
-        FROM transactions
+        FROM transactions t
+        JOIN transaction_types tt ON t.tx_type_id = tt.id
         WHERE 1=1
     '''
     params = []
@@ -165,15 +180,15 @@ def get_transaction_distribution():
     tx_type = request.args.get('type')
     
     if date_from:
-        query += " AND date >= ?"
+        query += " AND t.tx_timestamp >= ?"
         params.append(date_from)
     
     if date_to:
-        query += " AND date <= ?"
+        query += " AND t.tx_timestamp <= ?"
         params.append(date_to)
     
     if tx_type:
-        query += " AND type = ?"
+        query += " AND tt.name = ?"
         params.append(tx_type)
     
     query += " GROUP BY direction"
@@ -195,11 +210,16 @@ def get_summary():
     cursor = conn.cursor()
 
     summary = cursor.execute('''
-        SELECT type, COUNT(*) as count, SUM(amount) as total
-        FROM transactions
-        GROUP BY type
+        SELECT tt.name as type, COUNT(*) as count, SUM(t.amount) as total
+        FROM transactions t
+        JOIN transaction_types tt ON t.tx_type_id = tt.id
+        GROUP BY tt.name
     ''').fetchall()
     conn.close()
 
-    return jsonify([{ "type": row["type"], "count": row["count"], "total": row["total"] } for row in summary])
+    return jsonify({
+        'types': [row['type'] for row in summary],
+        'counts': [row['count'] for row in summary],
+        'totals': [row['total'] for row in summary]
+    })
 
