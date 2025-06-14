@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 import sqlite3
+from datetime import datetime, timedelta
 
 DB_FILE = "momo.db"
 
@@ -16,11 +17,11 @@ def create_app():
     CORS(app)
     
     @app.route("/")
-    def dashboard():
-        """Main dashboard page."""
-        return render_template("dashboard.html")
+    def index():
+        """Main index page."""
+        return render_template("index.html")
     
-    @app.route("/transactions", methods=["GET"])
+    @app.route("/api/transactions", methods=["GET"])
     def get_transactions():
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -29,6 +30,8 @@ def create_app():
         tx_type = request.args.get("type")
         min_amount = request.args.get("min_amount")
         max_amount = request.args.get("max_amount")
+        date_from = request.args.get("dateFrom")
+        date_to = request.args.get("dateTo")
         
         query = "SELECT * FROM transactions WHERE 1=1"
         params = []
@@ -42,6 +45,12 @@ def create_app():
         if max_amount:
             query += " AND amount <= ?"
             params.append(float(max_amount))
+        if date_from:
+            query += " AND timestamp >= ?"
+            params.append(date_from)
+        if date_to:
+            query += " AND timestamp <= ?"
+            params.append(date_to)
         
         cursor.execute(query, params)
         rows = cursor.fetchall()
@@ -49,52 +58,116 @@ def create_app():
         
         return jsonify([dict(row) for row in rows])
     
-    @app.route("/transaction/<int:tx_id>", methods=["GET"])
-    def get_transaction_by_id(tx_id):
+    @app.route("/api/transactions/volume", methods=["GET"])
+    def get_transaction_volume():
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM transactions WHERE id = ?", (tx_id,))
-        row = cursor.fetchone()
+        
+        # Get date range from request
+        date_from = request.args.get("start_date")
+        date_to = request.args.get("end_date")
+        tx_type = request.args.get("type")
+        
+        query = """
+            SELECT 
+                strftime('%Y-%m-%d', timestamp) as date,
+                COUNT(*) as count,
+                SUM(amount) as total
+            FROM transactions
+            WHERE 1=1
+        """
+        params = []
+        
+        if date_from:
+            query += " AND timestamp >= ?"
+            params.append(date_from)
+        if date_to:
+            query += " AND timestamp <= ?"
+            params.append(date_to)
+        if tx_type:
+            query += " AND transaction_type = ?"
+            params.append(tx_type)
+            
+        query += " GROUP BY date ORDER BY date"
+        
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
         conn.close()
         
-        if row:
-            return jsonify(dict(row))
-        else:
-            return jsonify({"error": "Transaction not found"}), 404
+        return jsonify([dict(row) for row in rows])
     
-    @app.route("/summary", methods=["GET"])
+    @app.route("/api/transactions/distribution", methods=["GET"])
+    def get_transaction_distribution():
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get date range from request
+        date_from = request.args.get("start_date")
+        date_to = request.args.get("end_date")
+        tx_type = request.args.get("type")
+        
+        query = """
+            SELECT 
+                transaction_type,
+                COUNT(*) as count,
+                SUM(amount) as total
+            FROM transactions
+            WHERE 1=1
+        """
+        params = []
+        
+        if date_from:
+            query += " AND timestamp >= ?"
+            params.append(date_from)
+        if date_to:
+            query += " AND timestamp <= ?"
+            params.append(date_to)
+        if tx_type:
+            query += " AND transaction_type = ?"
+            params.append(tx_type)
+            
+        query += " GROUP BY transaction_type"
+        
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return jsonify([dict(row) for row in rows])
+    
+    @app.route("/api/summary", methods=["GET"])
     def get_summary():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Total amount and count by type
+        # Get total balance
+        cursor.execute("SELECT SUM(amount) as total FROM transactions")
+        total_balance = cursor.fetchone()["total"] or 0
+        
+        # Get transaction counts by type
         cursor.execute("""
-            SELECT transaction_type, COUNT(*) as count, SUM(amount) as total
+            SELECT transaction_type, COUNT(*) as count
             FROM transactions
             GROUP BY transaction_type
         """)
-        summary = cursor.fetchall()
+        type_counts = [dict(row) for row in cursor.fetchall()]
         
-        # Monthly summary
+        # Get recent transactions
         cursor.execute("""
-            SELECT
-                strftime('%Y-%m', timestamp) as month,
-                COUNT(*) as count,
-                SUM(amount) as total
-            FROM transactions
-            GROUP BY month
-            ORDER BY month ASC
+            SELECT * FROM transactions
+            ORDER BY timestamp DESC
+            LIMIT 5
         """)
-        monthly = cursor.fetchall()
+        recent_transactions = [dict(row) for row in cursor.fetchall()]
         
         conn.close()
         
         return jsonify({
-            "by_type": [dict(row) for row in summary],
-            "monthly": [dict(row) for row in monthly]
+            "total_balance": total_balance,
+            "type_counts": type_counts,
+            "recent_transactions": recent_transactions
         })
     
-    @app.route("/health", methods=["GET"])
+    @app.route("/api/health", methods=["GET"])
     def health_check():
         """Health check endpoint."""
         return jsonify({"status": "healthy", "message": "MoMo API is running"})
