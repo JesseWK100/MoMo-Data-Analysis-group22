@@ -41,4 +41,4 @@ def get_summary():
     return jsonify({
         "total_balance": total_balance,
         "type_counts": type_counts,
-        "recent_transactions"_
+        "recent_transactions"})
