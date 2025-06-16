@@ -279,6 +279,14 @@
             color: #ff9800;
         }
 
+<<<<<<< HEAD
+=======
+        .transaction-icon.airtime {
+            background: #e3f2fd;
+            color: #2196f3;
+        }
+
+>>>>>>> 6fe945c25c1dea7d45c8cc94a86992ebdee0005a
         .transaction-details h4 {
             color: #1e3a5f;
             margin-bottom: 0.2rem;
@@ -294,6 +302,52 @@
             color: #1e3a5f;
         }
 
+<<<<<<< HEAD
+=======
+        .transaction-amount.negative {
+            color: #f44336;
+        }
+
+        .transaction-amount.positive {
+            color: #4caf50;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #198536;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+>>>>>>> 6fe945c25c1dea7d45c8cc94a86992ebdee0005a
         /* Stats Card */
         .stats-card {
             background: white;
@@ -398,6 +452,63 @@
             }
         }
     </style>
+<<<<<<< HEAD
+=======
+    <script>
+  // Fetch transaction summary
+  fetch('http://127.0.0.1:5000/api/summary')
+    .then(res => res.json())
+    .then(summary => {
+      document.getElementById("balance-amount").textContent = summary.total_balance.toLocaleString() + " RWF";
+
+      // Update transaction counts
+      summary.type_counts.forEach(item => {
+        const stat = document.querySelector(`[data-type="${item.transaction_type}"]`);
+        if (stat) stat.textContent = item.count;
+      });
+
+      // Load chart (optional)
+      const ctx = document.getElementById('chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: summary.type_counts.map(t => t.transaction_type),
+          datasets: [{
+            label: 'Transaction Count',
+            data: summary.type_counts.map(t => t.count),
+            backgroundColor: '#0095f6'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    })
+    .catch(err => console.error("Summary fetch error:", err));
+
+  // Fetch recent transactions
+  fetch('http://127.0.0.1:5000/api/transactions')
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById("recent-transactions");
+      data.slice(0, 5).forEach(tx => {
+        const item = document.createElement("div");
+        item.className = "transaction";
+        item.innerHTML = `
+          <div><strong>${tx.transaction_type}</strong></div>
+          <div>${tx.amount.toLocaleString()} RWF</div>
+          <div>${new Date(tx.timestamp).toLocaleDateString()}</div>
+        `;
+        container.appendChild(item);
+      });
+    })
+    .catch(err => console.error("Transactions fetch error:", err));
+</script>
+
+>>>>>>> 6fe945c25c1dea7d45c8cc94a86992ebdee0005a
 </head>
 <body>
     <!-- Header -->
@@ -479,6 +590,7 @@
                             <h3>Recent Transactions</h3>
                             <a href="#" style="color: #198536; text-decoration: none;">View All</a>
                         </div>
+<<<<<<< HEAD
                         <div class="transaction-item">
                             <div class="transaction-info">
                                 <div class="transaction-icon send">↗️</div>
@@ -518,12 +630,19 @@
                                 </div>
                             </div>
                             <div class="transaction-amount">-KES 500</div>
+=======
+                        
+                        <!-- Backend Transaction Container -->
+                        <div id="transactions">
+                            <div class="loading">Loading transactions...</div>
+>>>>>>> 6fe945c25c1dea7d45c8cc94a86992ebdee0005a
                         </div>
                     </div>
                 </div>
 
                 <div class="sidebar">
                     <!-- Stats Card -->
+<<<<<<< HEAD
                     <div class="stats-card">
                         <h3 style="margin-bottom: 1.5rem; color: #1e3a5f;">This Month</h3>
                         <div class="stats-grid">
@@ -531,6 +650,25 @@
                                 <div class="stat-value">24</div>
                                 <div class="stat-label">Transactions</div>
                             </div>
+=======
+                    <div id="stats-card" class="flex flex-col gap-4">
+  <div>
+    <h2 class="text-xl font-bold">Total Balance</h2>
+    <p class="text-2xl font-semibold text-green-600" id="balance-amount">Loading...</p>
+  </div>
+  <div class="grid grid-cols-2 gap-4">
+    <div class="bg-gray-100 p-2 rounded shadow">
+      <h3 class="text-sm text-gray-500">Send</h3>
+      <p class="text-xl font-bold stat-value" data-type="send">--</p>
+    </div>
+    <div class="bg-gray-100 p-2 rounded shadow">
+      <h3 class="text-sm text-gray-500">Receive</h3>
+      <p class="text-xl font-bold stat-value" data-type="receive">--</p>
+    </div>
+  </div>
+</div>
+
+>>>>>>> 6fe945c25c1dea7d45c8cc94a86992ebdee0005a
                             <div class="stat-item">
                                 <div class="stat-value">KES 12K</div>
                                 <div class="stat-label">Spent</div>
@@ -575,6 +713,7 @@
             </div>
         </div>
     </main>
+<<<<<<< HEAD
 
     <script>
         // Add click handlers for action cards
@@ -601,5 +740,7 @@
             });
         });
     </script>
+=======
+>>>>>>> 6fe945c25c1dea7d45c8cc94a86992ebdee0005a
 </body>
 </html>
