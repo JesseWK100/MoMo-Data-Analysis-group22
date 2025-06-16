@@ -82,15 +82,15 @@ This project focuses on the analysis of Mobile Money (MoMo) data, providing insi
 ### Project Structure
 
 momo-data-analysis/
-├── data/               # Data files
-├── notebooks/          # Jupyter notebooks
-├── src/               # Source code
-│   ├── analysis/      # Analysis scripts
-│   ├── visualization/ # Visualization scripts
-│   └── utils/         # Utility functions
-├── tests/             # Test files
-├── docs/              # Documentation
-└── requirements.txt   # Project dependencies
+├── api.py              # Backend API logic
+├── app.js              # Frontend application logic
+├── charts.js           # Handles chart visualizations
+├── data.js             # Manages data for frontend purposes
+├── index.html          # Main HTML file for the project
+├── modified_sms_v2.xml # Dataset or configuration file
+├── momo.py             # Backend or processing script for MoMo analysis
+├── styles.css          # CSS file for styling
+├── Assets/             # Additional resources like images or icons
 
 
 ## Usage
