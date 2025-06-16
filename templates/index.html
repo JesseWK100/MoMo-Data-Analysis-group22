@@ -408,23 +408,44 @@
             const typeSelect = document.getElementById('type').value;
             const dateRange = $('#date-range').data('daterangepicker');
             
-            let url = `${API_BASE_URL}/transactions`;
-            const params = new URLSearchParams();
-            
-            if (searchInput) params.append('search', searchInput);
-            if (typeSelect) params.append('type', typeSelect);
-            if (dateRange) {
-                params.append('date_from', dateRange.startDate.format('YYYY-MM-DD'));
-                params.append('date_to', dateRange.endDate.format('YYYY-MM-DD'));
-            }
-            
-            if (params.toString()) url += `?${params.toString()}`;
-
             try {
-                const response = await fetch(url);
+                const response = await fetch('transactions.json');
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
-                const data = await response.json();
+                let data = await response.json();
+                
+                // Apply filters
+                if (searchInput) {
+                    data = data.filter(txn => 
+                        txn.raw_body.toLowerCase().includes(searchInput.toLowerCase()) ||
+                        (txn.from_party && txn.from_party.toLowerCase().includes(searchInput.toLowerCase())) ||
+                        (txn.to_party && txn.to_party.toLowerCase().includes(searchInput.toLowerCase()))
+                    );
+                }
+                
+                if (typeSelect) {
+                    data = data.filter(txn => txn.tx_type_id === typeSelect);
+                }
+                
+                if (dateRange) {
+                    const startDate = new Date(dateRange.startDate.format('YYYY-MM-DD'));
+                    const endDate = new Date(dateRange.endDate.format('YYYY-MM-DD'));
+                    data = data.filter(txn => {
+                        const txDate = new Date(txn.tx_timestamp);
+                        return txDate >= startDate && txDate <= endDate;
+                    });
+                }
+
+                // Map fields to expected frontend structure
+                data = data.map(txn => ({
+                    ...txn,
+                    message: txn.raw_body,
+                    timestamp: txn.tx_timestamp,
+                    transaction_type: txn.tx_type,
+                    sender: txn.from_party,
+                    recipient: txn.to_party
+                }));
+                
                 displayTransactions(data);
                 updateCharts(data);
             } catch (error) {
@@ -448,8 +469,8 @@
                 transactionItem.className = 'transaction-item';
                 transactionItem.innerHTML = `
                     <div class="transaction-info">
-                        <h4>${txn.message || 'Transaction'}</h4>
-                        <p>${formatDate(txn.timestamp)}</p>
+                        <h4>${txn.raw_body || 'Transaction'}</h4>
+                        <p>${formatDate(txn.tx_timestamp)}</p>
                         <p>Amount: ${formatAmount(txn.amount)}</p>
                     </div>
                 `;
