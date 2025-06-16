@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoMo Analytics Dashboard</title>
+    <!-- Add Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add Date Range Picker -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        /* Header */
+        .header {
+            background: #198536;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: #ffcc00;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #1e3a5f;
+        }
+
+        .logo-text {
+            color: #ffcc00;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* Dashboard Content */
+        .dashboard {
+            margin-top: 80px;
+            padding: 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Search and Filter Panel */
+        .search-panel {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .search-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .search-item label {
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+
+        .search-item input,
+        .search-item select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h3 {
+            color: #1e3a5f;
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Transaction List */
+        .transaction-list {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .transaction-list h3 {
+            color: #1e3a5f;
+            margin-bottom: 1rem;
+        }
+
+        .transaction-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .transaction-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        /* Error State */
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #dc3545;
+            background: #fff;
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">△</div>
+                <div class="logo-text">MoMo Analytics</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <main class="dashboard">
+        <div class="container">
+            <!-- Search and Filter Panel -->
+            <div class="search-panel">
+                <div class="search-grid">
+                    <div class="search-item">
+                        <label for="search">Search</label>
+                        <input type="text" id="search" placeholder="Search transactions...">
+                    </div>
+                    <div class="search-item">
+                        <label for="type">Transaction Type</label>
+                        <select id="type">
+                            <option value="">All Types</option>
+                            <option value="1">Incoming</option>
+                            <option value="2">Payment</option>
+                            <option value="3">Bill</option>
+                            <option value="4">Deposit</option>
+                            <option value="5">Airtime</option>
+                            <option value="6">Cash Power</option>
+                            <option value="7">Withdrawal</option>
+                            <option value="8">OTP</option>
+                        </select>
+                    </div>
+                    <div class="search-item">
+                        <label for="date-range">Date Range</label>
+                        <input type="text" id="date-range">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Transaction Volume by Type</h3>
+                    <div class="chart-container">
+                        <canvas id="volumeChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Monthly Transaction Summary</h3>
+                    <div class="chart-container">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Deposits vs Withdrawals</h3>
+                    <div class="chart-container">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Top Transaction Types</h3>
+                    <div class="chart-container">
+                        <canvas id="topTypesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction List -->
+            <div class="transaction-list">
+                <h3>Recent Transactions</h3>
+                <div id="transactions">
+                    <div class="loading">Loading transactions...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Transaction Detail Modal -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Transaction Details</h2>
+            <div id="transactionDetails"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:5000/api';
+        let charts = {};
+
+        // Initialize date range picker
+        $(document).ready(function() {
+            $('#date-range').daterangepicker({
+                opens: 'left',
+                locale: {
+                    format: 'YYYY-MM-DD'
+                }
+            });
+        });
+
+        // Initialize charts
+        function initializeCharts() {
+            // Volume by Type Chart
+            charts.volume = new Chart(document.getElementById('volumeChart'), {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Transaction Volume',
+                        data: [],
+                        backgroundColor: '#198536'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Monthly Summary Chart
+            charts.monthly = new Chart(document.getElementById('monthlyChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Monthly Transactions',
+                        data: [],
+                        borderColor: '#198536',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Distribution Chart
+            charts.distribution = new Chart(document.getElementById('distributionChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Deposits', 'Withdrawals'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#198536', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Top Types Chart
+            charts.topTypes = new Chart(document.getElementById('topTypesChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: ['#198536', '#ffcc00', '#1e3a5f', '#dc3545', '#2196f3']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Fetch and display transactions
+        async function fetchTransactions() {
+            const searchInput = document.getElementById('search').value;
+            const typeSelect = document.getElementById('type').value;
+            const dateRange = $('#date-range').data('daterangepicker');
+            
+            try {
+                const response = await fetch('transactions.json');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                let data = await response.json();
+                
+                // Apply filters
+                if (searchInput) {
+                    data = data.filter(txn => 
+                        txn.raw_body.toLowerCase().includes(searchInput.toLowerCase()) ||
+                        (txn.from_party && txn.from_party.toLowerCase().includes(searchInput.toLowerCase())) ||
+                        (txn.to_party && txn.to_party.toLowerCase().includes(searchInput.toLowerCase()))
+                    );
+                }
+                
+                if (typeSelect) {
+                    data = data.filter(txn => txn.tx_type_id === typeSelect);
+                }
+                
+                if (dateRange) {
+                    const startDate = new Date(dateRange.startDate.format('YYYY-MM-DD'));
+                    const endDate = new Date(dateRange.endDate.format('YYYY-MM-DD'));
+                    data = data.filter(txn => {
+                        const txDate = new Date(txn.tx_timestamp);
+                        return txDate >= startDate && txDate <= endDate;
+                    });
+                }
+
+                // Map fields to expected frontend structure
+                data = data.map(txn => ({
+                    ...txn,
+                    message: txn.raw_body,
+                    timestamp: txn.tx_timestamp,
+                    transaction_type: txn.tx_type,
+                    sender: txn.from_party,
+                    recipient: txn.to_party
+                }));
+                
+                displayTransactions(data);
+                updateCharts(data);
+            } catch (error) {
+                console.error('Error fetching transactions:', error);
+                showError('Failed to load transactions. Please try again later.');
+            }
+        }
+
+        // Display transactions in the list
+        function displayTransactions(transactions) {
+            const container = document.getElementById('transactions');
+            container.innerHTML = '';
+
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = '<div class="loading">No transactions found</div>';
+                return;
+            }
+
+            transactions.forEach(txn => {
+                const transactionItem = document.createElement('div');
+                transactionItem.className = 'transaction-item';
+                transactionItem.innerHTML = `
+                    <div class="transaction-info">
+                        <h4>${txn.raw_body || 'Transaction'}</h4>
+                        <p>${formatDate(txn.tx_timestamp)}</p>
+                        <p>Amount: ${formatAmount(txn.amount)}</p>
+                    </div>
+                `;
+                
+                transactionItem.addEventListener('click', () => showTransactionDetails(txn));
+                container.appendChild(transactionItem);
+            });
+        }
+
+        // Update all charts with new data
+        function updateCharts(transactions) {
+            // Update Volume Chart
+            const volumeData = processVolumeData(transactions);
+            charts.volume.data.labels = volumeData.labels;
+            charts.volume.data.datasets[0].data = volumeData.values;
+            charts.volume.update();
+
+            // Update Monthly Chart
+            const monthlyData = processMonthlyData(transactions);
+            charts.monthly.data.labels = monthlyData.labels;
+            charts.monthly.data.datasets[0].data = monthlyData.values;
+            charts.monthly.update();
+
+            // Update Distribution Chart
+            const distributionData = processDistributionData(transactions);
+            charts.distribution.data.datasets[0].data = distributionData;
+            charts.distribution.update();
+
+            // Update Top Types Chart
+            const topTypesData = processTopTypesData(transactions);
+            charts.topTypes.data.labels = topTypesData.labels;
+            charts.topTypes.data.datasets[0].data = topTypesData.values;
+            charts.topTypes.update();
+        }
+
+        // Process data for volume chart
+        function processVolumeData(transactions) {
+            const typeCounts = {};
+            transactions.forEach(txn => {
+                typeCounts[txn.transaction_type] = (typeCounts[txn.transaction_type] || 0) + 1;
+            });
+            
+            return {
+                labels: Object.keys(typeCounts).map(type => getTransactionTypeName(type)),
+                values: Object.values(typeCounts)
+            };
+        }
+
+        // Process data for monthly chart
+        function processMonthlyData(transactions) {
+            const monthlyData = {};
+            transactions.forEach(txn => {
+                const month = new Date(txn.timestamp).toLocaleString('default', { month: 'short' });
+                monthlyData[month] = (monthlyData[month] || 0) + 1;
+            });
+            
+            return {
+                labels: Object.keys(monthlyData),
+                values: Object.values(monthlyData)
+            };
+        }
+
+        // Process data for distribution chart
+        function processDistributionData(transactions) {
+            let deposits = 0;
+            let withdrawals = 0;
+            
+            transactions.forEach(txn => {
+                if (['1', '4'].includes(txn.transaction_type)) {
+                    deposits += txn.amount;
+                } else {
+                    withdrawals += Math.abs(txn.amount);
+                }
+            });
+            
+            return [deposits, withdrawals];
+        }
+
+        // Process data for top types chart
+        function processTopTypesData(transactions) {
+            const typeCounts = {};
+            transactions.forEach(txn => {
+                typeCounts[txn.transaction_type] = (typeCounts[txn.transaction_type] || 0) + 1;
+            });
+            
+            const sortedTypes = Object.entries(typeCounts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+            
+            return {
+                labels: sortedTypes.map(([type]) => getTransactionTypeName(type)),
+                values: sortedTypes.map(([,count]) => count)
+            };
+        }
+
+        // Helper function to get transaction type name
+        function getTransactionTypeName(type) {
+            const types = {
+                '1': 'Incoming',
+                '2': 'Payment',
+                '3': 'Bill',
+                '4': 'Deposit',
+                '5': 'Airtime',
+                '6': 'Cash Power',
+                '7': 'Withdrawal',
+                '8': 'OTP'
+            };
+            return types[type] || 'Unknown';
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+
+        // Format amount
+        function formatAmount(amount) {
+            return new Intl.NumberFormat('en-RW', {
+                style: 'currency',
+                currency: 'RWF'
+            }).format(amount);
+        }
+
+        // Show transaction details in modal
+        function showTransactionDetails(transaction) {
+            const modal = document.getElementById('transactionModal');
+            const details = document.getElementById('transactionDetails');
+            
+            details.innerHTML = `
+                <p><strong>Date:</strong> ${formatDate(transaction.timestamp)}</p>
+                <p><strong>Amount:</strong> ${formatAmount(transaction.amount)}</p>
+                <p><strong>Type:</strong> ${getTransactionTypeName(transaction.transaction_type)}</p>
+                <p><strong>Description:</strong> ${transaction.message || 'N/A'}</p>
+                <p><strong>Sender:</strong> ${transaction.sender || 'N/A'}</p>
+                <p><strong>Recipient:</strong> ${transaction.recipient || 'N/A'}</p>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        // Close modal when clicking the close button or outside the modal
+        document.querySelector('.close-modal').addEventListener('click', () => {
+            document.getElementById('transactionModal').style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('transactionModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Add event listeners for search and filters
+        document.getElementById('search').addEventListener('input', fetchTransactions);
+        document.getElementById('type').addEventListener('change', fetchTransactions);
+        $('#date-range').on('apply.daterangepicker', fetchTransactions);
+
+        // Initialize the dashboard
+        initializeCharts();
+        fetchTransactions();
+    </script>
+</body>
+</html>
