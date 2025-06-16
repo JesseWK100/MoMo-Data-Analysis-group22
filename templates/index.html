@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MoMo Analytics Dashboard</title>
     <!-- Add Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
     <!-- Add Date Range Picker -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/daterangepicker/3.1.0/daterangepicker.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/daterangepicker/3.1.0/daterangepicker.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -23,6 +23,7 @@
             line-height: 1.6;
             color: #333;
             background: #f8f9fa;
+            min-height: 100vh;
         }
 
         /* Header */
@@ -42,7 +43,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 2rem;
+            padding: 0 1rem;
         }
 
         .logo {
@@ -61,6 +62,7 @@
             justify-content: center;
             font-weight: bold;
             color: #1e3a5f;
+            font-size: 1.2rem;
         }
 
         .logo-text {
@@ -72,13 +74,14 @@
         /* Dashboard Content */
         .dashboard {
             margin-top: 80px;
-            padding: 2rem;
+            padding: 1rem;
             min-height: calc(100vh - 80px);
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            width: 100%;
         }
 
         /* Search and Filter Panel */
@@ -92,8 +95,9 @@
 
         .search-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
+            align-items: end;
         }
 
         .search-item {
@@ -105,20 +109,30 @@
         .search-item label {
             font-weight: 600;
             color: #1e3a5f;
+            font-size: 0.9rem;
         }
 
         .search-item input,
         .search-item select {
-            padding: 0.5rem;
+            padding: 0.75rem;
             border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 0.9rem;
+            width: 100%;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .search-item input:focus,
+        .search-item select:focus {
+            outline: none;
+            border-color: #198536;
+            box-shadow: 0 0 0 2px rgba(25, 133, 54, 0.1);
         }
 
         /* Charts Grid */
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 2rem;
             margin-bottom: 2rem;
         }
@@ -128,16 +142,24 @@
             padding: 1.5rem;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-height: 380px;
         }
 
         .chart-card h3 {
             color: #1e3a5f;
             margin-bottom: 1rem;
+            font-size: 1.1rem;
         }
 
         .chart-container {
             position: relative;
             height: 300px;
+            width: 100%;
+        }
+
+        .chart-container canvas {
+            max-width: 100%;
+            height: auto !important;
         }
 
         /* Transaction List */
@@ -146,6 +168,7 @@
             padding: 1.5rem;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow-x: auto;
         }
 
         .transaction-list h3 {
@@ -158,6 +181,10 @@
             border-bottom: 1px solid #eee;
             cursor: pointer;
             transition: background-color 0.3s;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: center;
         }
 
         .transaction-item:hover {
@@ -166,6 +193,22 @@
 
         .transaction-item:last-child {
             border-bottom: none;
+        }
+
+        .transaction-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            color: #198536;
+        }
+
+        .transaction-details {
+            font-size: 0.9rem;
+            color: #666;
         }
 
         /* Modal */
@@ -177,18 +220,21 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.5);
-            z-index: 1000;
+            z-index: 2000;
+            padding: 1rem;
         }
 
         .modal-content {
             position: relative;
             background: white;
-            width: 90%;
+            width: 100%;
             max-width: 600px;
-            margin: 50px auto;
+            margin: 2rem auto;
             padding: 2rem;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
         }
 
         .close-modal {
@@ -198,6 +244,14 @@
             font-size: 1.5rem;
             cursor: pointer;
             color: #666;
+            background: none;
+            border: none;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .close-modal:hover {
+            color: #333;
         }
 
         /* Loading State */
@@ -212,20 +266,131 @@
             text-align: center;
             padding: 2rem;
             color: #dc3545;
-            background: #fff;
+            background: #fff5f5;
+            border: 1px solid #fecaca;
             border-radius: 12px;
             margin: 1rem 0;
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
+            .dashboard {
+                padding: 0.5rem;
+                margin-top: 70px;
+            }
+
+            .nav-container {
+                padding: 0 1rem;
+            }
+
+            .logo-text {
+                font-size: 1.2rem;
+            }
+
+            .logo-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+
+            .search-panel {
+                padding: 1rem;
             }
 
             .search-grid {
                 grid-template-columns: 1fr;
+                gap: 1rem;
             }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .chart-card {
+                padding: 1rem;
+                min-height: 320px;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .transaction-list {
+                padding: 1rem;
+            }
+
+            .transaction-item {
+                grid-template-columns: 1fr;
+                text-align: left;
+            }
+
+            .modal-content {
+                margin: 1rem auto;
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .search-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container {
+                height: 200px;
+            }
+
+            .transaction-item {
+                padding: 0.75rem;
+            }
+
+            .logo-text {
+                display: none;
+            }
+        }
+
+        /* Utility Classes */
+        .text-center {
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .visible {
+            display: block !important;
+        }
+
+        /* Better button styling for interactive elements */
+        button, .btn {
+            background: #198536;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        button:hover, .btn:hover {
+            background: #146b2a;
+        }
+
+        /* Accessibility improvements */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Focus indicators for keyboard navigation */
+        *:focus {
+            outline: 2px solid #198536;
+            outline-offset: 2px;
         }
     </style>
 </head>
@@ -234,7 +399,7 @@
     <header class="header">
         <div class="nav-container">
             <div class="logo">
-                <div class="logo-icon">△</div>
+                <div class="logo-icon" aria-label="MoMo Analytics Logo">△</div>
                 <div class="logo-text">MoMo Analytics</div>
             </div>
         </div>
@@ -244,15 +409,16 @@
     <main class="dashboard">
         <div class="container">
             <!-- Search and Filter Panel -->
-            <div class="search-panel">
+            <section class="search-panel" aria-label="Search and Filter Options">
                 <div class="search-grid">
                     <div class="search-item">
                         <label for="search">Search</label>
-                        <input type="text" id="search" placeholder="Search transactions...">
+                        <input type="text" id="search" placeholder="Search transactions..." aria-describedby="search-help">
+                        <small id="search-help" class="sr-only">Search by transaction ID, amount, or description</small>
                     </div>
                     <div class="search-item">
                         <label for="type">Transaction Type</label>
-                        <select id="type">
+                        <select id="type" aria-describedby="type-help">
                             <option value="">All Types</option>
                             <option value="1">Incoming</option>
                             <option value="2">Payment</option>
@@ -263,62 +429,264 @@
                             <option value="7">Withdrawal</option>
                             <option value="8">OTP</option>
                         </select>
+                        <small id="type-help" class="sr-only">Filter transactions by type</small>
                     </div>
                     <div class="search-item">
                         <label for="date-range">Date Range</label>
-                        <input type="text" id="date-range">
+                        <input type="text" id="date-range" placeholder="Select date range" aria-describedby="date-help">
+                        <small id="date-help" class="sr-only">Select start and end date for filtering</small>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Charts Grid -->
-            <div class="charts-grid">
+            <section class="charts-grid" aria-label="Analytics Charts">
                 <div class="chart-card">
                     <h3>Transaction Volume by Type</h3>
                     <div class="chart-container">
-                        <canvas id="volumeChart"></canvas>
+                        <canvas id="volumeChart" aria-label="Chart showing transaction volume by type"></canvas>
                     </div>
                 </div>
                 <div class="chart-card">
                     <h3>Monthly Transaction Summary</h3>
                     <div class="chart-container">
-                        <canvas id="monthlyChart"></canvas>
+                        <canvas id="monthlyChart" aria-label="Chart showing monthly transaction summary"></canvas>
                     </div>
                 </div>
                 <div class="chart-card">
                     <h3>Deposits vs Withdrawals</h3>
                     <div class="chart-container">
-                        <canvas id="distributionChart"></canvas>
+                        <canvas id="distributionChart" aria-label="Chart showing deposits versus withdrawals"></canvas>
                     </div>
                 </div>
                 <div class="chart-card">
                     <h3>Top Transaction Types</h3>
                     <div class="chart-container">
-                        <canvas id="topTypesChart"></canvas>
+                        <canvas id="topTypesChart" aria-label="Chart showing top transaction types"></canvas>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Transaction List -->
-            <div class="transaction-list">
+            <section class="transaction-list" aria-label="Recent Transactions">
                 <h3>Recent Transactions</h3>
-                <div id="transactions">
-                    <div class="loading" id="loading">Loading transactions...</div>
-                    <div id="error-message" class="error" style="display: none;"></div>
+                <div id="transactions" role="list">
+                    <div class="loading" id="loading" aria-live="polite">Loading transactions...</div>
+                    <div id="error-message" class="error hidden" role="alert" aria-live="assertive"></div>
                 </div>
-            </div>
+            </section>
         </div>
     </main>
 
     <!-- Transaction Detail Modal -->
-    <div id="transactionModal" class="modal">
+    <div id="transactionModal" class="modal" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
         <div class="modal-content">
-            <span class="close-modal">×</span>
-            <h2>Transaction Details</h2>
-            <div id="transactionDetails"></div>
+            <button class="close-modal" aria-label="Close transaction details">×</button>
+            <h2 id="modal-title">Transaction Details</h2>
+            <div id="transactionDetails" role="main"></div>
         </div>
     </div>
 
-    <script src="dashboard.js"></script>
+    <script>
+        // Mock dashboard functionality since dashboard.js is not provided
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize date range picker
+            $('#date-range').daterangepicker({
+                startDate: moment().subtract(29, 'days'),
+                endDate: moment(),
+                ranges: {
+                   'Today': [moment(), moment()],
+                   'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                   'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                   'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                   'This Month': [moment().startOf('month'), moment().endOf('month')],
+                   'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                }
+            });
+
+            // Mock chart data
+            const chartColors = {
+                primary: '#198536',
+                secondary: '#ffcc00',
+                tertiary: '#1e3a5f',
+                quaternary: '#dc3545',
+                quinary: '#6c757d'
+            };
+
+            // Initialize charts with sample data
+            initializeCharts();
+
+            // Load sample transactions
+            loadSampleTransactions();
+
+            // Modal functionality
+            const modal = document.getElementById('transactionModal');
+            const closeModal = document.querySelector('.close-modal');
+
+            closeModal.addEventListener('click', () => {
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    modal.setAttribute('aria-hidden', 'true');
+                }
+            });
+
+            // Escape key to close modal
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.style.display === 'block') {
+                    modal.style.display = 'none';
+                    modal.setAttribute('aria-hidden', 'true');
+                }
+            });
+        });
+
+        function initializeCharts() {
+            // Volume Chart
+            const volumeCtx = document.getElementById('volumeChart').getContext('2d');
+            new Chart(volumeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Incoming', 'Payment', 'Bill', 'Deposit', 'Airtime', 'Cash Power', 'Withdrawal'],
+                    datasets: [{
+                        label: 'Transaction Count',
+                        data: [120, 89, 45, 78, 156, 67, 234],
+                        backgroundColor: '#198536',
+                        borderColor: '#146b2a',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Monthly Chart
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Transactions',
+                        data: [450, 520, 480, 670, 580, 720],
+                        borderColor: '#198536',
+                        backgroundColor: 'rgba(25, 133, 54, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Distribution Chart
+            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+            new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Deposits', 'Withdrawals'],
+                    datasets: [{
+                        data: [65, 35],
+                        backgroundColor: ['#198536', '#ffcc00'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Top Types Chart
+            const topTypesCtx = document.getElementById('topTypesChart').getContext('2d');
+            new Chart(topTypesCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Withdrawal', 'Airtime', 'Incoming', 'Payment', 'Deposit'],
+                    datasets: [{
+                        data: [234, 156, 120, 89, 78],
+                        backgroundColor: ['#198536', '#ffcc00', '#1e3a5f', '#dc3545', '#6c757d']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function loadSampleTransactions() {
+            const loading = document.getElementById('loading');
+            const transactionsContainer = document.getElementById('transactions');
+            
+            // Simulate loading
+            setTimeout(() => {
+                loading.style.display = 'none';
+                
+                const sampleTransactions = [
+                    { id: 'TXN001', type: 'Withdrawal', amount: 50000, date: '2024-06-15', status: 'Completed' },
+                    { id: 'TXN002', type: 'Airtime', amount: 5000, date: '2024-06-15', status: 'Completed' },
+                    { id: 'TXN003', type: 'Deposit', amount: 100000, date: '2024-06-14', status: 'Completed' },
+                    { id: 'TXN004', type: 'Payment', amount: 25000, date: '2024-06-14', status: 'Pending' },
+                    { id: 'TXN005', type: 'Bill', amount: 15000, date: '2024-06-13', status: 'Completed' }
+                ];
+
+                sampleTransactions.forEach(transaction => {
+                    const transactionElement = document.createElement('div');
+                    transactionElement.className = 'transaction-item';
+                    transactionElement.setAttribute('role', 'listitem');
+                    transactionElement.innerHTML = `
+                        <div class="transaction-info">
+                            <div class="transaction-amount">RWF ${transaction.amount.toLocaleString()}</div>
+                            <div class="transaction-details">${transaction.type} • ${transaction.id} • ${transaction.date}</div>
+                        </div>
+                        <div class="transaction-status">${transaction.status}</div>
+                    `;
+                    
+                    transactionElement.addEventListener('click', () => showTransactionDetails(transaction));
+                    transactionsContainer.appendChild(transactionElement);
+                });
+            }, 1000);
+        }
+
+        function showTransactionDetails(transaction) {
+            const modal = document.getElementById('transactionModal');
+            const details = document.getElementById('transactionDetails');
+            
+            details.innerHTML = `
+                <div style="display: grid; gap: 1rem;">
+                    <div><strong>Transaction ID:</strong> ${transaction.id}</div>
+                    <div><strong>Type:</strong> ${transaction.type}</div>
+                    <div><strong>Amount:</strong> RWF ${transaction.amount.toLocaleString()}</div>
+                    <div><strong>Date:</strong> ${transaction.date}</div>
+                    <div><strong>Status:</strong> ${transaction.status}</div>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+            modal.setAttribute('aria-hidden', 'false');
+        }
+    </script>
 </body>
 </html>
