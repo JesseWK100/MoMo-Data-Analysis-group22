@@ -79,11 +79,7 @@ const fetchTransactions = debounce(async function() {
     const searchInput = document.getElementById('search').value;
     const typeSelect = document.getElementById('type').value;
     const dateRange = $('#date-range').data('daterangepicker');
-<<<<<<< HEAD
     let url = ${API_BASE_URL}/transactions;
-=======
-    let url = `${API_BASE_URL}/transactions`;
->>>>>>> 13a82ae8372c9bca66c41ded63ade33bdf67e705
     const params = new URLSearchParams();
     if (searchInput) params.append('search', searchInput);
     if (typeSelect) params.append('type', typeSelect);
@@ -91,17 +87,10 @@ const fetchTransactions = debounce(async function() {
         params.append('date_from', dateRange.startDate.format('YYYY-MM-DD'));
         params.append('date_to', dateRange.endDate.format('YYYY-MM-DD'));
     }
-<<<<<<< HEAD
     if (params.toString()) url += ?${params.toString()};
     try {
         const response = await fetch(url);
         if (!response.ok) throw new Error(HTTP error! status: ${response.status});
-=======
-    if (params.toString()) url += `?${params.toString()}`;
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
->>>>>>> 13a82ae8372c9bca66c41ded63ade33bdf67e705
         const data = await response.json();
         displayTransactions(data);
         updateCharts(data);
@@ -272,8 +261,4 @@ $('#date-range').on('apply.daterangepicker', fetchTransactions);
         }
     });
     $(window).on('resize', debounce(handleResize, 200));
-<<<<<<< HEAD
 });
-=======
-}); 
->>>>>>> 13a82ae8372c9bca66c41ded63ade33bdf67e705
