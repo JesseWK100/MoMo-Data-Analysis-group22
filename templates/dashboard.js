@@ -1,15 +1,16 @@
+const API_BASE_URL = 'http://127.0.0.1:5000/api';
 let charts = {};
 
 // Initialize date range picker
 $(document).ready(function() {
     $('#date-range').daterangepicker({
-        opens: window.innerWidth <= 768 ? 'center' : 'left',
+        opens: window.innerWidth <= 768 ? 'center' : 'left', // Center date picker on mobile
         locale: {
             format: 'YYYY-MM-DD'
         },
-        autoApply: true,
+        autoApply: true, // Auto-apply dates for better mobile UX
         maxSpan: {
-            days: 30
+            days: 30 // Limit date range to improve performance
         }
     });
 });
@@ -18,6 +19,7 @@ $(document).ready(function() {
 function initializeCharts() {
     const isMobile = window.innerWidth <= 768;
 
+    // Volume by Type Chart
     charts.volume = new Chart(document.getElementById('volumeChart'), {
         type: 'bar',
         data: {
@@ -35,7 +37,7 @@ function initializeCharts() {
                 legend: {
                     labels: {
                         font: {
-                            size: isMobile ? 12 : 14
+                            size: isMobile ? 12 : 14 // Smaller font on mobile
                         }
                     }
                 }
@@ -43,7 +45,7 @@ function initializeCharts() {
             scales: {
                 x: {
                     ticks: {
-                        maxRotation: isMobile ? 45 : 0,
+                        maxRotation: isMobile ? 45 : 0, // Rotate labels on mobile
                         font: {
                             size: isMobile ? 10 : 12
                         }
@@ -60,6 +62,7 @@ function initializeCharts() {
         }
     });
 
+    // Monthly Summary Chart
     charts.monthly = new Chart(document.getElementById('monthlyChart'), {
         type: 'line',
         data: {
@@ -102,6 +105,7 @@ function initializeCharts() {
         }
     });
 
+    // Distribution Chart
     charts.distribution = new Chart(document.getElementById('distributionChart'), {
         type: 'pie',
         data: {
@@ -116,7 +120,7 @@ function initializeCharts() {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: isMobile ? 'bottom' : 'top',
+                    position: isMobile ? 'bottom' : 'top', // Move legend to bottom on mobile
                     labels: {
                         font: {
                             size: isMobile ? 12 : 14
@@ -127,6 +131,7 @@ function initializeCharts() {
         }
     });
 
+    // Top Types Chart
     charts.topTypes = new Chart(document.getElementById('topTypesChart'), {
         type: 'doughnut',
         data: {
@@ -153,7 +158,7 @@ function initializeCharts() {
     });
 }
 
-// Debounce function
+// Debounce function to limit API calls
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -172,71 +177,42 @@ const fetchTransactions = debounce(async function() {
     const typeSelect = document.getElementById('type').value;
     const dateRange = $('#date-range').data('daterangepicker');
     
+    let url = `${API_BASE_URL}/transactions`;
+    const params = new URLSearchParams();
+    
+    if (searchInput) params.append('search', searchInput);
+    if (typeSelect) params.append('type', typeSelect);
+    if (dateRange) {
+        params.append('date_from', dateRange.startDate.format('YYYY-MM-DD'));
+        params.append('date_to', dateRange.endDate.format('YYYY-MM-DD'));
+    }
+    
+    if (params.toString()) url += `?${params.toString()}`;
+
     try {
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('error-message').style.display = 'none';
-        document.getElementById('transactions').innerHTML = '<div class="loading" id="loading">Loading transactions...</div>';
-
-        const response = await fetch('transactions.json', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}, ${response.statusText}`);
-        }
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const data = await response.json();
-        if (!Array.isArray(data)) {
-            throw new Error('Invalid data format: Expected an array of transactions');
-        }
-
-        let filteredData = data;
-        if (searchInput) {
-            filteredData = filteredData.filter(t =>
-                (t.message || '').toLowerCase().includes(searchInput.toLowerCase()) ||
-                (t.sender || '').toLowerCase().includes(searchInput.toLowerCase()) ||
-                (t.recipient || '').toLowerCase().includes(searchInput.toLowerCase())
-            );
-        }
-        if (typeSelect) {
-            filteredData = filteredData.filter(t => t.transaction_type === typeSelect);
-        }
-        if (dateRange) {
-            const startDate = dateRange.startDate.format('YYYY-MM-DD');
-            const endDate = dateRange.endDate.format('YYYY-MM-DD');
-            filteredData = filteredData.filter(t => t.timestamp.slice(0, 10) >= startDate && t.timestamp.slice(0, 10) <= endDate);
-        }
-
-        document.getElementById('loading').style.display = 'none';
-        displayTransactions(filteredData);
-        updateCharts(filteredData);
+        displayTransactions(data);
+        updateCharts(data);
     } catch (error) {
         console.error('Error fetching transactions:', error);
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('error-message').innerText = `Failed to load transactions: ${error.message}. Please ensure transactions.json exists.`;
-        document.getElementById('error-message').style.display = 'block';
-        document.getElementById('transactions').innerHTML = '';
+        showError('Failed to load transactions. Please try again later.');
     }
-}, 300);
+}, 300); // 300ms debounce
 
-// Display transactions
+// Display transactions in the list
 function displayTransactions(transactions) {
     const container = document.getElementById('transactions');
     container.innerHTML = '';
 
     if (!transactions || transactions.length === 0) {
-        container.innerHTML = '<div class="error">No transactions found for the selected criteria.</div>';
+        container.innerHTML = '<div class="loading">No transactions found</div>';
         return;
     }
 
     transactions.forEach(txn => {
-        if (!txn || !txn.transaction_type || !txn.amount || !txn.timestamp) {
-            console.warn('Invalid transaction data:', txn);
-            return;
-        }
         const transactionItem = document.createElement('div');
         transactionItem.className = 'transaction-item';
         transactionItem.innerHTML = `
@@ -252,35 +228,37 @@ function displayTransactions(transactions) {
     });
 }
 
-// Update charts
+// Update all charts with new data
 function updateCharts(transactions) {
+    // Update Volume Chart
     const volumeData = processVolumeData(transactions);
     charts.volume.data.labels = volumeData.labels;
     charts.volume.data.datasets[0].data = volumeData.values;
     charts.volume.update();
 
+    // Update Monthly Chart
     const monthlyData = processMonthlyData(transactions);
     charts.monthly.data.labels = monthlyData.labels;
     charts.monthly.data.datasets[0].data = monthlyData.values;
     charts.monthly.update();
 
+    // Update Distribution Chart
     const distributionData = processDistributionData(transactions);
     charts.distribution.data.datasets[0].data = distributionData;
     charts.distribution.update();
 
+    // Update Top Types Chart
     const topTypesData = processTopTypesData(transactions);
     charts.topTypes.data.labels = topTypesData.labels;
     charts.topTypes.data.datasets[0].data = topTypesData.values;
     charts.topTypes.update();
 }
 
-// Process volume chart data
+// Process data for volume chart
 function processVolumeData(transactions) {
     const typeCounts = {};
     transactions.forEach(txn => {
-        if (txn.transaction_type) {
-            typeCounts[txn.transaction_type] = (typeCounts[txn.transaction_type] || 0) + 1;
-        }
+        typeCounts[txn.transaction_type] = (typeCounts[txn.transaction_type] || 0) + 1;
     });
     
     return {
@@ -289,14 +267,12 @@ function processVolumeData(transactions) {
     };
 }
 
-// Process monthly chart data
+// Process data for monthly chart
 function processMonthlyData(transactions) {
     const monthlyData = {};
     transactions.forEach(txn => {
-        if (txn.timestamp) {
-            const month = new Date(txn.timestamp).toLocaleString('default', { month: 'short', year: 'numeric' });
-            monthlyData[month] = (monthlyData[month] || 0) + 1;
-        }
+        const month = new Date(txn.timestamp).toLocaleString('default', { month: 'short', year: 'numeric' });
+        monthlyData[month] = (monthlyData[month] || 0) + 1;
     });
     
     return {
@@ -305,36 +281,32 @@ function processMonthlyData(transactions) {
     };
 }
 
-// Process distribution chart data
+// Process data for distribution chart
 function processDistributionData(transactions) {
     let deposits = 0;
     let withdrawals = 0;
     
     transactions.forEach(txn => {
-        if (txn.transaction_type && txn.amount) {
-            if (['1', '4'].includes(txn.transaction_type)) {
-                deposits += txn.amount;
-            } else {
-                withdrawals += Math.abs(txn.amount);
-            }
+        if (['1', '4'].includes(txn.transaction_type)) {
+            deposits += txn.amount;
+        } else {
+            withdrawals += Math.abs(txn.amount);
         }
     });
     
     return [deposits, withdrawals];
 }
 
-// Process top types chart data
+// Process data for top types chart
 function processTopTypesData(transactions) {
     const typeCounts = {};
     transactions.forEach(txn => {
-        if (txn.transaction_type) {
-            typeCounts[txn.transaction_type] = (typeCounts[txn.transaction_type] || 0) + 1;
-        }
+        typeCounts[txn.transaction_type] = (typeCounts[txn.transaction_type] || 0) + 1;
     });
     
     const sortedTypes = Object.entries(typeCounts)
         .sort(([,a], [,b]) => b - a)
-        .slice(0, window.innerWidth <= 768 ? 3 : 5);
+        .slice(0, window.innerWidth <= 768 ? 3 : 5); // Show fewer types on mobile
     
     return {
         labels: sortedTypes.map(([type]) => getTransactionTypeName(type)),
@@ -342,7 +314,7 @@ function processTopTypesData(transactions) {
     };
 }
 
-// Get transaction type name
+// Helper function to get transaction type name
 function getTransactionTypeName(type) {
     const types = {
         '1': 'Incoming',
@@ -361,7 +333,7 @@ function getTransactionTypeName(type) {
 function formatDate(dateString) {
     const date = new Date(dateString);
     return window.innerWidth <= 768
-        ? date.toLocaleDateString()
+        ? date.toLocaleDateString() // Simpler date format on mobile
         : date.toLocaleString();
 }
 
@@ -370,11 +342,11 @@ function formatAmount(amount) {
     return new Intl.NumberFormat('en-RW', {
         style: 'currency',
         currency: 'RWF',
-        minimumFractionDigits: window.innerWidth <= 768 ? 0 : 2
+        minimumFractionDigits: window.innerWidth <= 768 ? 0 : 2 // Less precision on mobile
     }).format(amount);
 }
 
-// Show transaction details
+// Show transaction details in modal
 function showTransactionDetails(transaction) {
     const modal = document.getElementById('transactionModal');
     const details = document.getElementById('transactionDetails');
@@ -393,16 +365,14 @@ function showTransactionDetails(transaction) {
 
 // Show error message
 function showError(message) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('error-message').innerText = message;
-    document.getElementById('error-message').style.display = 'block';
-    document.getElementById('transactions').innerHTML = '';
+    const container = document.getElementById('transactions');
+    container.innerHTML = `<div class="error">${message}</div>`;
 }
 
 // Handle window resize
 function handleResize() {
-    initializeCharts();
-    fetchTransactions();
+    initializeCharts(); // Reinitialize charts on resize
+    fetchTransactions(); // Refresh data to adjust for new screen size
 }
 
 // Event listeners
