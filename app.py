@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 import sqlite3
 from datetime import datetime, timedelta
+import json
+import os
 
 DB_FILE = "momo.db"
 
@@ -14,139 +16,129 @@ def get_db_connection():
 def create_app():
     """Create and configure Flask application."""
     app = Flask(__name__)
-    CORS(app)
+    CORS(app, resources={r"/api/*": {"origins": ["http://127.0.0.1:5500", "http://localhost:5500"]}})
     
     @app.route("/")
     def index():
         """Main index page."""
         return render_template("index.html")
     
+    def load_transactions_from_json():
+        """Load transactions from transactions.json file."""
+        try:
+            with open('transactions.json', 'r') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            print("transactions.json not found")
+            return []
+        except json.JSONDecodeError:
+            print("Error decoding transactions.json")
+            return []
+    
     @app.route("/api/transactions", methods=["GET"])
     def get_transactions():
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Get optional filters from URL
-        tx_type = request.args.get("type")
-        min_amount = request.args.get("min_amount")
-        max_amount = request.args.get("max_amount")
-        date_from = request.args.get("dateFrom")
-        date_to = request.args.get("dateTo")
-        
-        query = """
-            SELECT 
-                id,
-                amount,
-                currency,
-                tx_timestamp as timestamp,
-                from_party as sender,
-                to_party as recipient,
-                raw_body as message,
-                tx_type_id as transaction_type
-            FROM transactions
-            WHERE 1=1
-        """
-        params = []
-        
-        if tx_type:
-            query += " AND tx_type_id = ?"
-            params.append(tx_type)
-        if min_amount:
-            query += " AND amount >= ?"
-            params.append(float(min_amount))
-        if max_amount:
-            query += " AND amount <= ?"
-            params.append(float(max_amount))
-        if date_from:
-            query += " AND tx_timestamp >= ?"
-            params.append(date_from)
-        if date_to:
-            query += " AND tx_timestamp <= ?"
-            params.append(date_to)
-        
-        query += " ORDER BY tx_timestamp DESC"
-        
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
-        conn.close()
-        
-        return jsonify([dict(row) for row in rows])
+        """Get all transactions with optional filtering."""
+        try:
+            # Get filter parameters
+            tx_type = request.args.get('type')
+            date_from = request.args.get('date_from')
+            date_to = request.args.get('date_to')
+            
+            # Load transactions from JSON
+            transactions = load_transactions_from_json()
+            
+            # Apply filters
+            filtered_transactions = []
+            for tx in transactions:
+                # Convert tx_type to match the filter
+                tx_type_match = tx.get('tx_type', '').lower() == (tx_type or '').lower()
+                date_match = True
+                
+                if date_from or date_to:
+                    tx_date = tx.get('tx_timestamp', '').split('T')[0]  # Get date part only
+                    if date_from and tx_date < date_from:
+                        date_match = False
+                    if date_to and tx_date > date_to:
+                        date_match = False
+                
+                if (not tx_type or tx_type_match) and date_match:
+                    filtered_transactions.append(tx)
+            
+            return jsonify(filtered_transactions)
+            
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
     
     @app.route("/api/transactions/volume", methods=["GET"])
     def get_transaction_volume():
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Get date range from request
-        date_from = request.args.get("start_date")
-        date_to = request.args.get("end_date")
-        tx_type = request.args.get("type")
-        
-        query = """
-            SELECT 
-                strftime('%Y-%m-%d', timestamp) as date,
-                COUNT(*) as count,
-                SUM(amount) as total
-            FROM transactions
-            WHERE 1=1
-        """
-        params = []
-        
-        if date_from:
-            query += " AND timestamp >= ?"
-            params.append(date_from)
-        if date_to:
-            query += " AND timestamp <= ?"
-            params.append(date_to)
-        if tx_type:
-            query += " AND transaction_type = ?"
-            params.append(tx_type)
+        """Get transaction volume by type."""
+        try:
+            transactions = load_transactions_from_json()
+            volume_by_type = {}
             
-        query += " GROUP BY date ORDER BY date"
-        
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
-        conn.close()
-        
-        return jsonify([dict(row) for row in rows])
+            for tx in transactions:
+                tx_type = tx.get('tx_type', 'unknown')
+                volume_by_type[tx_type] = volume_by_type.get(tx_type, 0) + 1
+            
+            return jsonify(volume_by_type)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route("/api/transactions/monthly", methods=["GET"])
+    def get_monthly_transactions():
+        """Get monthly transaction summary."""
+        try:
+            transactions = load_transactions_from_json()
+            monthly_data = {}
+            
+            for tx in transactions:
+                date = tx.get('tx_timestamp', '').split('T')[0][:7]  # Get YYYY-MM
+                monthly_data[date] = monthly_data.get(date, 0) + 1
+            
+            return jsonify(monthly_data)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
     
     @app.route("/api/transactions/distribution", methods=["GET"])
     def get_transaction_distribution():
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Get date range from request
-        date_from = request.args.get("start_date")
-        date_to = request.args.get("end_date")
-        tx_type = request.args.get("type")
-        
-        query = """
-            SELECT 
-                transaction_type,
-                COUNT(*) as count,
-                SUM(amount) as total
-            FROM transactions
-            WHERE 1=1
-        """
-        params = []
-        
-        if date_from:
-            query += " AND timestamp >= ?"
-            params.append(date_from)
-        if date_to:
-            query += " AND timestamp <= ?"
-            params.append(date_to)
-        if tx_type:
-            query += " AND transaction_type = ?"
-            params.append(tx_type)
+        """Get transaction distribution between deposits and withdrawals."""
+        try:
+            transactions = load_transactions_from_json()
+            deposits = 0
+            withdrawals = 0
             
-        query += " GROUP BY transaction_type"
-        
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
-        conn.close()
-        
-        return jsonify([dict(row) for row in rows])
+            for tx in transactions:
+                amount = float(tx.get('amount', 0))
+                tx_type = tx.get('tx_type', '').lower()
+                
+                if tx_type in ['deposit', 'incoming']:
+                    deposits += amount
+                elif tx_type in ['withdrawal', 'payment']:
+                    withdrawals += abs(amount)
+            
+            return jsonify({
+                "deposits": deposits,
+                "withdrawals": withdrawals
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route("/api/transactions/top-types", methods=["GET"])
+    def get_top_transaction_types():
+        """Get top transaction types by volume."""
+        try:
+            transactions = load_transactions_from_json()
+            type_counts = {}
+            
+            for tx in transactions:
+                tx_type = tx.get('tx_type', 'unknown')
+                type_counts[tx_type] = type_counts.get(tx_type, 0) + 1
+            
+            # Sort by count and get top 5
+            top_types = dict(sorted(type_counts.items(), key=lambda x: x[1], reverse=True)[:5])
+            return jsonify(top_types)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
     
     @app.route("/api/summary", methods=["GET"])
     def get_summary():
@@ -159,7 +151,7 @@ def create_app():
         
         # Get transaction counts by type
         cursor.execute("""
-            SELECT tx_type_id as transaction_type, COUNT(*) as count
+            SELECT tx_type_id, COUNT(*) as count
             FROM transactions
             GROUP BY tx_type_id
         """)
@@ -168,14 +160,18 @@ def create_app():
         # Get recent transactions
         cursor.execute("""
             SELECT 
-                id,
+                sms_id,
+                raw_body,
+                tx_type_id,
                 amount,
                 currency,
-                tx_timestamp as timestamp,
-                from_party as sender,
-                to_party as recipient,
-                raw_body as message,
-                tx_type_id as transaction_type
+                fee,
+                tx_timestamp,
+                from_party,
+                to_party,
+                momo_tx_id,
+                agent_id,
+                extra_info
             FROM transactions
             ORDER BY tx_timestamp DESC
             LIMIT 5
@@ -194,6 +190,32 @@ def create_app():
     def health_check():
         """Health check endpoint."""
         return jsonify({"status": "healthy", "message": "MoMo API is running"})
+    
+    def init_db():
+        """Initialize the database with required tables and data."""
+        with app.app_context():
+            db = get_db_connection()
+            with app.open_resource('schema.sql') as f:
+                db.executescript(f.read().decode('utf8'))
+            
+            # Initialize transaction types
+            transaction_types = [
+                ('incoming',),
+                ('payment',),
+                ('transfer',),
+                ('deposit',),
+                ('airtime',),
+                ('cash_power',),
+                ('withdrawal',),
+                ('otp',)
+            ]
+            
+            try:
+                db.executemany('INSERT OR IGNORE INTO transaction_types (name) VALUES (?)', transaction_types)
+                db.commit()
+            except sqlite3.Error as e:
+                print(f"Error initializing transaction types: {e}")
+                db.rollback()
     
     return app
 
