@@ -33,11 +33,23 @@ def create_app():
         date_from = request.args.get("dateFrom")
         date_to = request.args.get("dateTo")
         
-        query = "SELECT * FROM transactions WHERE 1=1"
+        query = """
+            SELECT 
+                id,
+                amount,
+                currency,
+                tx_timestamp as timestamp,
+                from_party as sender,
+                to_party as recipient,
+                raw_body as message,
+                tx_type_id as transaction_type
+            FROM transactions
+            WHERE 1=1
+        """
         params = []
         
         if tx_type:
-            query += " AND transaction_type = ?"
+            query += " AND tx_type_id = ?"
             params.append(tx_type)
         if min_amount:
             query += " AND amount >= ?"
@@ -46,11 +58,13 @@ def create_app():
             query += " AND amount <= ?"
             params.append(float(max_amount))
         if date_from:
-            query += " AND timestamp >= ?"
+            query += " AND tx_timestamp >= ?"
             params.append(date_from)
         if date_to:
-            query += " AND timestamp <= ?"
+            query += " AND tx_timestamp <= ?"
             params.append(date_to)
+        
+        query += " ORDER BY tx_timestamp DESC"
         
         cursor.execute(query, params)
         rows = cursor.fetchall()
@@ -145,16 +159,25 @@ def create_app():
         
         # Get transaction counts by type
         cursor.execute("""
-            SELECT transaction_type, COUNT(*) as count
+            SELECT tx_type_id as transaction_type, COUNT(*) as count
             FROM transactions
-            GROUP BY transaction_type
+            GROUP BY tx_type_id
         """)
         type_counts = [dict(row) for row in cursor.fetchall()]
         
         # Get recent transactions
         cursor.execute("""
-            SELECT * FROM transactions
-            ORDER BY timestamp DESC
+            SELECT 
+                id,
+                amount,
+                currency,
+                tx_timestamp as timestamp,
+                from_party as sender,
+                to_party as recipient,
+                raw_body as message,
+                tx_type_id as transaction_type
+            FROM transactions
+            ORDER BY tx_timestamp DESC
             LIMIT 5
         """)
         recent_transactions = [dict(row) for row in cursor.fetchall()]

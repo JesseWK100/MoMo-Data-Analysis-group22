@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoMo Dashboard - Do More with MoMo</title>
+    <title>MoMo Analytics Dashboard</title>
+    <!-- Add Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add Date Range Picker -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -21,7 +28,7 @@
         /* Header */
         .header {
             background: #198536;
-            padding: 0;
+            padding: 1rem 0;
             position: fixed;
             width: 100%;
             top: 0;
@@ -36,7 +43,6 @@
             justify-content: space-between;
             align-items: center;
             padding: 0 2rem;
-            height: 80px;
         }
 
         .logo {
@@ -63,37 +69,6 @@
             font-weight: bold;
         }
 
-        .logo-sub {
-            color: #fff;
-            font-size: 0.8rem;
-            margin-top: -5px;
-        }
-
-        .dashboard-title {
-            color: #fff;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            color: #fff;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: #ffcc00;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #1e3a5f;
-        }
-
         /* Dashboard Content */
         .dashboard {
             margin-top: 80px;
@@ -106,664 +81,153 @@
             margin: 0 auto;
         }
 
-        .dashboard-header {
+        /* Search and Filter Panel */
+        .search-panel {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             margin-bottom: 2rem;
         }
 
-        .dashboard-header h1 {
-            color: #1e3a5f;
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .dashboard-header p {
-            color: #666;
-            font-size: 1.1rem;
-        }
-
-        /* Quick Actions */
-        .quick-actions {
+        .search-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .action-card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 1px solid #e0e0e0;
-            position: relative;
-            overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-        }
-
-        .action-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-            border-color: #007bff;
-        }
-
-        .action-card:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .action-card h3 {
-            color: #333;
-            margin: 0 0 10px 0;
-            font-size: 1.1em;
-            transition: color 0.3s ease;
-        }
-
-        .action-card:hover h3 {
-            color: #007bff;
-        }
-
-        .action-card p {
-            color: #666;
-            margin: 0;
-            font-size: 0.9em;
-            transition: color 0.3s ease;
-        }
-
-        .action-card:hover p {
-            color: #333;
-        }
-
-        /* Add ripple effect */
-        .action-card::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 5px;
-            background: rgba(0, 123, 255, 0.3);
-            opacity: 0;
-            border-radius: 100%;
-            transform: scale(1, 1) translate(-50%);
-            transform-origin: 50% 50%;
-        }
-
-        .action-card:active::after {
-            animation: ripple 0.6s ease-out;
-        }
-
-        @keyframes ripple {
-            0% {
-                transform: scale(0, 0);
-                opacity: 0.5;
-            }
-            100% {
-                transform: scale(20, 20);
-                opacity: 0;
-            }
-        }
-
-        .action-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #198536, #ffcc00);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-            font-size: 1.5rem;
-            color: white;
-        }
-
-        /* Dashboard Grid */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
-        /* Balance Card */
-        .balance-card {
-            background: linear-gradient(135deg, #198536, #1e3a5f);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .balance-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .balance-title {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .balance-amount {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-
-        .balance-currency {
-            font-size: 1rem;
-            opacity: 0.8;
-        }
-
-        /* Transaction History */
-        .transaction-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-
-        .transaction-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .transaction-item {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 1px solid #e0e0e0;
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-        }
-
-        .transaction-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-color: #007bff;
-        }
-
-        .transaction-item:active {
-            transform: translateX(0);
-        }
-
-        .transaction-info {
-            display: flex;
-            align-items: center;
             gap: 1rem;
         }
 
-        .transaction-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+        .search-item {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
-        .transaction-icon.send {
-            background: #ffebee;
-            color: #f44336;
-        }
-
-        .transaction-icon.receive {
-            background: #e8f5e8;
-            color: #4caf50;
-        }
-
-        .transaction-icon.bill {
-            background: #fff3e0;
-            color: #ff9800;
-        }
-
-        .transaction-icon.airtime {
-            background: #e3f2fd;
-            color: #2196f3;
-        }
-
-        .transaction-details h4 {
+        .search-item label {
+            font-weight: 600;
             color: #1e3a5f;
-            margin-bottom: 0.2rem;
         }
 
-        .transaction-details p {
-            color: #666;
+        .search-item input,
+        .search-item select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
             font-size: 0.9rem;
         }
 
-        .transaction-amount {
-            font-weight: bold;
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h3 {
             color: #1e3a5f;
+            margin-bottom: 1rem;
         }
 
-        .transaction-amount.negative {
-            color: #f44336;
+        .chart-container {
+            position: relative;
+            height: 300px;
         }
 
-        .transaction-amount.positive {
-            color: #4caf50;
+        /* Transaction List */
+        .transaction-list {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .transaction-list h3 {
+            color: #1e3a5f;
+            margin-bottom: 1rem;
+        }
+
+        .transaction-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .transaction-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
         }
 
         /* Loading State */
         .loading {
             text-align: center;
-            padding: 20px;
+            padding: 2rem;
             color: #666;
-            font-style: italic;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
         }
 
         /* Error State */
         .error {
             text-align: center;
-            padding: 20px;
+            padding: 2rem;
             color: #dc3545;
             background: #fff;
             border-radius: 12px;
-            margin: 10px 0;
-            border: 1px solid #dc3545;
-        }
-
-        .error small {
-            display: block;
-            margin-top: 5px;
-            color: #666;
-            font-size: 0.8em;
-        }
-
-        /* Stats Card */
-        .stats-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #198536;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        /* Notifications */
-        .notifications-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-
-        .notification-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .notification-item:last-child {
-            border-bottom: none;
-        }
-
-        .notification-icon {
-            width: 35px;
-            height: 35px;
-            background: #e3f2fd;
-            color: #2196f3;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-        }
-
-        .notification-content h4 {
-            color: #1e3a5f;
-            font-size: 0.95rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .notification-content p {
-            color: #666;
-            font-size: 0.85rem;
+            margin: 1rem 0;
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .nav-container {
-                padding: 0 1rem;
-            }
-            
-            .dashboard {
-                padding: 1rem;
-            }
-            
-            .dashboard-grid {
+            .charts-grid {
                 grid-template-columns: 1fr;
             }
-            
-            .quick-actions {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .stats-grid {
+
+            .search-grid {
                 grid-template-columns: 1fr;
             }
-            
-            .balance-amount {
-                font-size: 2rem;
-            }
-            
-            .user-profile {
-                display: none;
-            }
-        }
-
-        /* Update button styles */
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            background: #007bff;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            font-size: 0.9em;
-            letter-spacing: 0.5px;
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-        }
-
-        .btn:hover {
-            background: #0056b3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
     </style>
-    <script>
-        const API_BASE_URL = 'http://localhost:5000/api';
-
-        // Function to get transaction icon based on type
-        function getTransactionIcon(type) {
-            if (!type) {
-                return { class: 'send', icon: '💸' }; // Default icon for undefined type
-            }
-            
-            const iconMap = {
-                '1': { class: 'receive', icon: '↙️' },  // Incoming
-                '2': { class: 'send', icon: '↗️' },     // Payment
-                '3': { class: 'bill', icon: '💡' },     // Bill
-                '4': { class: 'receive', icon: '💳' },  // Deposit
-                '5': { class: 'airtime', icon: '📱' },  // Airtime
-                '6': { class: 'bill', icon: '⚡' },     // Cash Power
-                '7': { class: 'send', icon: '🏧' },     // Withdrawal
-                '8': { class: 'bill', icon: '🔐' }      // OTP
-            };
-            return iconMap[type] || { class: 'send', icon: '💸' };
-        }
-
-        // Function to format amount with proper styling
-        function formatAmount(amount, type) {
-            if (amount === undefined || amount === null) {
-                return { amount: 'N/A', class: 'neutral' };
-            }
-            
-            const isNegative = type === '2' || type === '3' || type === '5' || type === '6' || type === '7'; // Payment, Bill, Airtime, Cash Power, Withdrawal
-            const formattedAmount = Math.abs(amount).toLocaleString('en-RW', {
-                style: 'currency',
-                currency: 'RWF',
-                minimumFractionDigits: 0
-            });
-            
-            return {
-                amount: (isNegative ? '-' : '+') + formattedAmount,
-                class: isNegative ? 'negative' : 'positive'
-            };
-        }
-
-        // Function to format date
-        function formatDate(dateString) {
-            if (!dateString) {
-                return 'Date not available';
-            }
-            
-            try {
-                const date = new Date(dateString);
-                const now = new Date();
-                const diffTime = Math.abs(now - date);
-                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                
-                if (diffDays === 0) {
-                    return `Today, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
-                } else if (diffDays === 1) {
-                    return `Yesterday, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
-                } else if (diffDays < 7) {
-                    return `${diffDays} days ago, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
-                } else {
-                    return date.toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                }
-            } catch (error) {
-                console.error('Error formatting date:', error);
-                return 'Invalid date';
-            }
-        }
-
-        // Function to show loading state
-        function showLoading(element) {
-            element.innerHTML = '<div class="loading">Loading...</div>';
-        }
-
-        // Function to show error state
-        function showError(element, message) {
-            element.innerHTML = `
-                <div class="error">
-                    ${message}
-                    <small>Please try again later</small>
-                </div>
-            `;
-        }
-
-        // Function to add click animation
-        function addClickAnimation(element) {
-            element.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                element.style.transform = '';
-            }, 200);
-        }
-
-        // Function to display transactions
-        function displayTransactions(transactions, container) {
-            container.innerHTML = ''; // Clear container
-            
-            if (!transactions || transactions.length === 0) {
-                container.innerHTML = '<div class="loading">No transactions found</div>';
-                return;
-            }
-            
-            transactions.forEach(txn => {
-                const iconInfo = getTransactionIcon(txn.transaction_type);
-                const amountInfo = formatAmount(txn.amount, txn.transaction_type);
-                
-                const transactionItem = document.createElement('div');
-                transactionItem.className = 'transaction-item';
-                
-                // Get the appropriate party name based on transaction type
-                let partyName = '';
-                if (txn.transaction_type === '1' || txn.transaction_type === '4') {
-                    partyName = txn.sender || 'Unknown Sender';
-                } else if (txn.transaction_type === '2' || txn.transaction_type === '3' || txn.transaction_type === '5' || txn.transaction_type === '6') {
-                    partyName = txn.recipient || 'Unknown Recipient';
-                }
-                
-                transactionItem.innerHTML = `
-                    <div class="transaction-info">
-                        <div class="transaction-icon ${iconInfo.class}">${iconInfo.icon}</div>
-                        <div class="transaction-details">
-                            <h4>${txn.message || partyName || 'Transaction'}</h4>
-                            <p>${formatDate(txn.timestamp)}</p>
-                        </div>
-                    </div>
-                    <div class="transaction-amount ${amountInfo.class}">${amountInfo.amount}</div>
-                `;
-                
-                container.appendChild(transactionItem);
-            });
-        }
-
-        // Fetch and display transactions
-        async function fetchTransactions(transactionType = null) {
-            const container = document.getElementById('transactions');
-            showLoading(container);
-            
-            try {
-                const url = transactionType 
-                    ? `${API_BASE_URL}/transactions/${transactionType}`
-                    : `${API_BASE_URL}/transactions`;
-                    
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                console.log('Transactions data:', data);
-                
-                // Display only the first 5 transactions for the dashboard
-                const recentTransactions = data.slice(0, 5);
-                displayTransactions(recentTransactions, container);
-                
-            } catch (error) {
-                console.error('Error fetching transactions:', error);
-                showError(container, `Failed to load transactions. Please check if the backend server is running.<br><small>Error: ${error.message}</small>`);
-            }
-        }
-
-        // Initialize dashboard
-        async function initializeDashboard() {
-            try {
-                await fetchTransactions();
-            } catch (error) {
-                console.error('Error initializing dashboard:', error);
-            }
-        }
-
-        // Add click handlers for action cards
-        document.querySelectorAll('.action-card').forEach(card => {
-            card.addEventListener('click', function() {
-                addClickAnimation(this);
-                const action = this.querySelector('h3').textContent.toLowerCase();
-                console.log(`${action} clicked`);
-                
-                // Map action text to transaction type
-                const actionMap = {
-                    'buy airtime': '5',      // Airtime
-                    'pay bills': '3',        // Bill
-                    'send money': '2',       // Payment
-                    'receive money': '1',    // Incoming
-                    'pay merchant': '2',     // Payment
-                    'savings': '4'           // Deposit
-                };
-                
-                const transactionType = actionMap[action];
-                if (transactionType) {
-                    fetchTransactions(transactionType);
-                } else {
-                    alert(`${action} feature will be implemented here`);
-                }
-            });
-        });
-
-        // Add smooth animations on load
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeDashboard();
-            
-            const cards = document.querySelectorAll('.action-card, .balance-card, .transaction-card, .stats-card, .notifications-card');
-            
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = 'all 0.6s ease';
-                
-                setTimeout(() => {
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-        });
-    </script>
 </head>
 <body>
     <!-- Header -->
@@ -771,15 +235,7 @@
         <div class="nav-container">
             <div class="logo">
                 <div class="logo-icon">△</div>
-                <div>
-                    <div class="logo-text">MoMo</div>
-                    <div class="logo-sub">from MTN</div>
-                </div>
-            </div>
-            <div class="dashboard-title">Dashboard</div>
-            <div class="user-profile">
-                <div class="user-avatar">JD</div>
-                <span>John Doe</span>
+                <div class="logo-text">MoMo Analytics</div>
             </div>
         </div>
     </header>
@@ -787,124 +243,373 @@
     <!-- Dashboard Content -->
     <main class="dashboard">
         <div class="container">
-            <div class="dashboard-header">
-                <h1>Welcome back, John!</h1>
-                <p>Here's what's happening with your MoMo account today.</p>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <div class="action-card">
-                    <div class="action-icon">💸</div>
-                    <h3>Send Money</h3>
-                    <p>Transfer funds instantly</p>
-                </div>
-                <div class="action-card">
-                    <div class="action-icon">💰</div>
-                    <h3>Receive Money</h3>
-                    <p>Get paid easily</p>
-                </div>
-                <div class="action-card">
-                    <div class="action-icon">📱</div>
-                    <h3>Buy Airtime</h3>
-                    <p>Top up your phone</p>
-                </div>
-                <div class="action-card">
-                    <div class="action-icon">💡</div>
-                    <h3>Pay Bills</h3>
-                    <p>Utilities & services</p>
-                </div>
-                <div class="action-card">
-                    <div class="action-icon">🏪</div>
-                    <h3>Pay Merchant</h3>
-                    <p>Shop & pay online</p>
-                </div>
-                <div class="action-card">
-                    <div class="action-icon">💳</div>
-                    <h3>Savings</h3>
-                    <p>Save for the future</p>
+            <!-- Search and Filter Panel -->
+            <div class="search-panel">
+                <div class="search-grid">
+                    <div class="search-item">
+                        <label for="search">Search</label>
+                        <input type="text" id="search" placeholder="Search transactions...">
+                    </div>
+                    <div class="search-item">
+                        <label for="type">Transaction Type</label>
+                        <select id="type">
+                            <option value="">All Types</option>
+                            <option value="1">Incoming</option>
+                            <option value="2">Payment</option>
+                            <option value="3">Bill</option>
+                            <option value="4">Deposit</option>
+                            <option value="5">Airtime</option>
+                            <option value="6">Cash Power</option>
+                            <option value="7">Withdrawal</option>
+                            <option value="8">OTP</option>
+                        </select>
+                    </div>
+                    <div class="search-item">
+                        <label for="date-range">Date Range</label>
+                        <input type="text" id="date-range">
+                    </div>
                 </div>
             </div>
 
-            <!-- Dashboard Grid -->
-            <div class="dashboard-grid">
-                <div class="main-content">
-                    <!-- Balance Card -->
-                    <div class="balance-card">
-                        <div class="balance-header">
-                            <div class="balance-title">Account Balance</div>
-                            <div>👁️</div>
-                        </div>
-                        <div class="balance-amount">KES 45,280</div>
-                        <div class="balance-currency">Kenyan Shillings</div>
-                    </div>
-
-                    <!-- Transaction History -->
-                    <div class="transaction-card">
-                        <div class="transaction-header">
-                            <h3>Recent Transactions</h3>
-                            <a href="#" style="color: #198536; text-decoration: none;">View All</a>
-                        </div>
-                        
-                        <!-- Backend Transaction Container -->
-                        <div id="transactions">
-                            <div class="loading">Loading transactions...</div>
-                        </div>
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Transaction Volume by Type</h3>
+                    <div class="chart-container">
+                        <canvas id="volumeChart"></canvas>
                     </div>
                 </div>
-
-                <div class="sidebar">
-                    <!-- Stats Card -->
-                    <div class="stats-card">
-                        <h3 style="margin-bottom: 1.5rem; color: #1e3a5f;">This Month</h3>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <div class="stat-value">24</div>
-                                <div class="stat-label">Transactions</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">KES 12K</div>
-                                <div class="stat-label">Spent</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">KES 25K</div>
-                                <div class="stat-label">Received</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">5</div>
-                                <div class="stat-label">Bill Payments</div>
-                            </div>
-                        </div>
+                <div class="chart-card">
+                    <h3>Monthly Transaction Summary</h3>
+                    <div class="chart-container">
+                        <canvas id="monthlyChart"></canvas>
                     </div>
-
-                    <!-- Notifications -->
-                    <div class="notifications-card">
-                        <h3 style="margin-bottom: 1.5rem; color: #1e3a5f;">Notifications</h3>
-                        <div class="notification-item">
-                            <div class="notification-icon">🔔</div>
-                            <div class="notification-content">
-                                <h4>Transaction Successful</h4>
-                                <p>Money sent to Mary Wanjiku</p>
-                            </div>
-                        </div>
-                        <div class="notification-item">
-                            <div class="notification-icon">🎉</div>
-                            <div class="notification-content">
-                                <h4>Cashback Earned</h4>
-                                <p>You earned KES 50 cashback</p>
-                            </div>
-                        </div>
-                        <div class="notification-item">
-                            <div class="notification-icon">📱</div>
-                            <div class="notification-content">
-                                <h4>Bill Reminder</h4>
-                                <p>Your water bill is due tomorrow</p>
-                            </div>
-                        </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Deposits vs Withdrawals</h3>
+                    <div class="chart-container">
+                        <canvas id="distributionChart"></canvas>
                     </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Top Transaction Types</h3>
+                    <div class="chart-container">
+                        <canvas id="topTypesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction List -->
+            <div class="transaction-list">
+                <h3>Recent Transactions</h3>
+                <div id="transactions">
+                    <div class="loading">Loading transactions...</div>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- Transaction Detail Modal -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Transaction Details</h2>
+            <div id="transactionDetails"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:5000/api';
+        let charts = {};
+
+        // Initialize date range picker
+        $(document).ready(function() {
+            $('#date-range').daterangepicker({
+                opens: 'left',
+                locale: {
+                    format: 'YYYY-MM-DD'
+                }
+            });
+        });
+
+        // Initialize charts
+        function initializeCharts() {
+            // Volume by Type Chart
+            charts.volume = new Chart(document.getElementById('volumeChart'), {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Transaction Volume',
+                        data: [],
+                        backgroundColor: '#198536'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Monthly Summary Chart
+            charts.monthly = new Chart(document.getElementById('monthlyChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Monthly Transactions',
+                        data: [],
+                        borderColor: '#198536',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Distribution Chart
+            charts.distribution = new Chart(document.getElementById('distributionChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Deposits', 'Withdrawals'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#198536', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Top Types Chart
+            charts.topTypes = new Chart(document.getElementById('topTypesChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: ['#198536', '#ffcc00', '#1e3a5f', '#dc3545', '#2196f3']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Fetch and display transactions
+        async function fetchTransactions() {
+            const searchInput = document.getElementById('search').value;
+            const typeSelect = document.getElementById('type').value;
+            const dateRange = $('#date-range').data('daterangepicker');
+            
+            let url = `${API_BASE_URL}/transactions`;
+            const params = new URLSearchParams();
+            
+            if (searchInput) params.append('search', searchInput);
+            if (typeSelect) params.append('type', typeSelect);
+            if (dateRange) {
+                params.append('date_from', dateRange.startDate.format('YYYY-MM-DD'));
+                params.append('date_to', dateRange.endDate.format('YYYY-MM-DD'));
+            }
+            
+            if (params.toString()) url += `?${params.toString()}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                displayTransactions(data);
+                updateCharts(data);
+            } catch (error) {
+                console.error('Error fetching transactions:', error);
+                showError('Failed to load transactions. Please try again later.');
+            }
+        }
+
+        // Display transactions in the list
+        function displayTransactions(transactions) {
+            const container = document.getElementById('transactions');
+            container.innerHTML = '';
+
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = '<div class="loading">No transactions found</div>';
+                return;
+            }
+
+            transactions.forEach(txn => {
+                const transactionItem = document.createElement('div');
+                transactionItem.className = 'transaction-item';
+                transactionItem.innerHTML = `
+                    <div class="transaction-info">
+                        <h4>${txn.message || 'Transaction'}</h4>
+                        <p>${formatDate(txn.timestamp)}</p>
+                        <p>Amount: ${formatAmount(txn.amount)}</p>
+                    </div>
+                `;
+                
+                transactionItem.addEventListener('click', () => showTransactionDetails(txn));
+                container.appendChild(transactionItem);
+            });
+        }
+
+        // Update all charts with new data
+        function updateCharts(transactions) {
+            // Update Volume Chart
+            const volumeData = processVolumeData(transactions);
+            charts.volume.data.labels = volumeData.labels;
+            charts.volume.data.datasets[0].data = volumeData.values;
+            charts.volume.update();
+
+            // Update Monthly Chart
+            const monthlyData = processMonthlyData(transactions);
+            charts.monthly.data.labels = monthlyData.labels;
+            charts.monthly.data.datasets[0].data = monthlyData.values;
+            charts.monthly.update();
+
+            // Update Distribution Chart
+            const distributionData = processDistributionData(transactions);
+            charts.distribution.data.datasets[0].data = distributionData;
+            charts.distribution.update();
+
+            // Update Top Types Chart
+            const topTypesData = processTopTypesData(transactions);
+            charts.topTypes.data.labels = topTypesData.labels;
+            charts.topTypes.data.datasets[0].data = topTypesData.values;
+            charts.topTypes.update();
+        }
+
+        // Process data for volume chart
+        function processVolumeData(transactions) {
+            const typeCounts = {};
+            transactions.forEach(txn => {
+                typeCounts[txn.transaction_type] = (typeCounts[txn.transaction_type] || 0) + 1;
+            });
+            
+            return {
+                labels: Object.keys(typeCounts).map(type => getTransactionTypeName(type)),
+                values: Object.values(typeCounts)
+            };
+        }
+
+        // Process data for monthly chart
+        function processMonthlyData(transactions) {
+            const monthlyData = {};
+            transactions.forEach(txn => {
+                const month = new Date(txn.timestamp).toLocaleString('default', { month: 'short' });
+                monthlyData[month] = (monthlyData[month] || 0) + 1;
+            });
+            
+            return {
+                labels: Object.keys(monthlyData),
+                values: Object.values(monthlyData)
+            };
+        }
+
+        // Process data for distribution chart
+        function processDistributionData(transactions) {
+            let deposits = 0;
+            let withdrawals = 0;
+            
+            transactions.forEach(txn => {
+                if (['1', '4'].includes(txn.transaction_type)) {
+                    deposits += txn.amount;
+                } else {
+                    withdrawals += Math.abs(txn.amount);
+                }
+            });
+            
+            return [deposits, withdrawals];
+        }
+
+        // Process data for top types chart
+        function processTopTypesData(transactions) {
+            const typeCounts = {};
+            transactions.forEach(txn => {
+                typeCounts[txn.transaction_type] = (typeCounts[txn.transaction_type] || 0) + 1;
+            });
+            
+            const sortedTypes = Object.entries(typeCounts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+            
+            return {
+                labels: sortedTypes.map(([type]) => getTransactionTypeName(type)),
+                values: sortedTypes.map(([,count]) => count)
+            };
+        }
+
+        // Helper function to get transaction type name
+        function getTransactionTypeName(type) {
+            const types = {
+                '1': 'Incoming',
+                '2': 'Payment',
+                '3': 'Bill',
+                '4': 'Deposit',
+                '5': 'Airtime',
+                '6': 'Cash Power',
+                '7': 'Withdrawal',
+                '8': 'OTP'
+            };
+            return types[type] || 'Unknown';
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+
+        // Format amount
+        function formatAmount(amount) {
+            return new Intl.NumberFormat('en-RW', {
+                style: 'currency',
+                currency: 'RWF'
+            }).format(amount);
+        }
+
+        // Show transaction details in modal
+        function showTransactionDetails(transaction) {
+            const modal = document.getElementById('transactionModal');
+            const details = document.getElementById('transactionDetails');
+            
+            details.innerHTML = `
+                <p><strong>Date:</strong> ${formatDate(transaction.timestamp)}</p>
+                <p><strong>Amount:</strong> ${formatAmount(transaction.amount)}</p>
+                <p><strong>Type:</strong> ${getTransactionTypeName(transaction.transaction_type)}</p>
+                <p><strong>Description:</strong> ${transaction.message || 'N/A'}</p>
+                <p><strong>Sender:</strong> ${transaction.sender || 'N/A'}</p>
+                <p><strong>Recipient:</strong> ${transaction.recipient || 'N/A'}</p>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        // Close modal when clicking the close button or outside the modal
+        document.querySelector('.close-modal').addEventListener('click', () => {
+            document.getElementById('transactionModal').style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('transactionModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Add event listeners for search and filters
+        document.getElementById('search').addEventListener('input', fetchTransactions);
+        document.getElementById('type').addEventListener('change', fetchTransactions);
+        $('#date-range').on('apply.daterangepicker', fetchTransactions);
+
+        // Initialize the dashboard
+        initializeCharts();
+        fetchTransactions();
+    </script>
 </body>
 </html>
