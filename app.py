@@ -171,6 +171,10 @@ def create_app():
     
     return app
 
+<<<<<<< HEAD
 if _name_ == '_main_':
+=======
+if __name__ == '__main__':
+>>>>>>> 13a82ae8372c9bca66c41ded63ade33bdf67e705
     app = create_app()
     app.run(debug=True)
