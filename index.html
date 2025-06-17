@@ -642,7 +642,7 @@
                 <div class="stat-card">
                     <div class="stat-icon">📊</div>
                     <h3>Total Transactions</h3>
-                    <div class="stat-value" id="totalTxn">1,248</div>
+                    <div class="stat-value" id="totalTxn">1,600</div>
                 </div>
 
                 <div class="stat-card">
@@ -727,42 +727,7 @@
                             </tr>
                         </thead>
                         <tbody id="transactionBody">
-                            <!-- Sample data rows -->
-                            <tr>
-                                <td>2025-06-15</td>
-                                <td>Incoming</td>
-                                <td>+50,000 RWF</td>
-                                <td>Payment from John Doe</td>
-                                <td><button class="action-btn">Details</button></td>
-                            </tr>
-                            <tr>
-                                <td>2025-06-14</td>
-                                <td>Airtime</td>
-                                <td>-5,000 RWF</td>
-                                <td>Airtime purchase</td>
-                                <td><button class="action-btn">Details</button></td>
-                            </tr>
-                            <tr>
-                                <td>2025-06-13</td>
-                                <td>Withdrawal</td>
-                                <td>-100,000 RWF</td>
-                                <td>Agent withdrawal</td>
-                                <td><button class="action-btn">Details</button></td>
-                            </tr>
-                            <tr>
-                                <td>2025-06-12</td>
-                                <td>Transfer</td>
-                                <td>-25,000 RWF</td>
-                                <td>Transfer to 0788123456</td>
-                                <td><button class="action-btn">Details</button></td>
-                            </tr>
-                            <tr>
-                                <td>2025-06-11</td>
-                                <td>Cash Power</td>
-                                <td>-10,000 RWF</td>
-                                <td>Electricity payment</td>
-                                <td><button class="action-btn">Details</button></td>
-                            </tr>
+                            <!-- Transactions will be loaded dynamically -->
                         </tbody>
                     </table>
                 </div>
@@ -773,7 +738,7 @@
                     <span class="btn-icon">←</span>
                     <span class="btn-text">Previous</span>
                 </button>
-                <span id="pageInfo">Page 1 of 5</span>
+                <span id="pageInfo">Page 1 of 32</span>
                 <button id="nextBtn" class="pagination-btn">
                     <span class="btn-text">Next</span>
                     <span class="btn-icon">→</span>
@@ -822,42 +787,7 @@
                 <span class="close">&times;</span>
                 <h2>Transaction Details</h2>
                 <div id="modalBody">
-                    <!-- Sample modal content -->
-                    <div style="display: grid; gap: 20px;">
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px;">
-                            <div>
-                                <h3 style="font-size: 1.8rem; color: var(--success); margin-bottom: 5px;">+50,000 RWF</h3>
-                                <p style="color: var(--gray);">Incoming Transaction</p>
-                            </div>
-                            <div style="background-color: rgba(0, 200, 83, 0.1); padding: 10px 15px; border-radius: 6px; color: var(--success); font-weight: 500;">
-                                Completed
-                            </div>
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div>
-                                <p style="color: var(--gray); font-size: 0.9rem;">Transaction ID</p>
-                                <p style="font-weight: 500;">TXN-20250615-001</p>
-                            </div>
-                            <div>
-                                <p style="color: var(--gray); font-size: 0.9rem;">Date & Time</p>
-                                <p style="font-weight: 500;">2025-06-15 14:30:22</p>
-                            </div>
-                            <div>
-                                <p style="color: var(--gray); font-size: 0.9rem;">Sender</p>
-                                <p style="font-weight: 500;">John Doe (0788123456)</p>
-                            </div>
-                            <div>
-                                <p style="color: var(--gray); font-size: 0.9rem;">Reference</p>
-                                <p style="font-weight: 500;">Payment for services</p>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <p style="color: var(--gray); font-size: 0.9rem;">Additional Notes</p>
-                            <p style="font-weight: 500;">Monthly payment for consulting services rendered in May 2025</p>
-                        </div>
-                    </div>
+                    <!-- Content will be loaded dynamically -->
                 </div>
             </div>
         </div>
@@ -900,7 +830,7 @@
             <div class="footer-bottom">
                 <div class="footer-bottom-content">
                     <div class="copyright">
-                        <p>&copy; 2025 | Student Project Group 22 </p>
+                        <p>&copy; 2025 | ALU Student Project Group 22 </p>
                         <p class="footer-tagline">Everywhere you go</p>
                     </div>
                     <div class="footer-legal">
@@ -915,6 +845,214 @@
 
     <!-- JavaScript -->
     <script>
+        // Generate sample transaction data (1600 records)
+        function generateTransactionData() {
+            const types = ['incoming', 'payment', 'transfer', 'deposit', 'airtime', 'cashpower', 'withdrawal', 'banktransfer'];
+            const descriptions = [
+                'Payment from client', 'Airtime purchase', 'Utility payment', 'School fees', 
+                'Medical bill', 'Shopping', 'Restaurant', 'Transport', 'Salary', 'Freelance work'
+            ];
+            const transactions = [];
+            
+            for (let i = 0; i < 1600; i++) {
+                const date = new Date();
+                date.setDate(date.getDate() - Math.floor(Math.random() * 365)); // Random date within last year
+                const type = types[Math.floor(Math.random() * types.length)];
+                const amount = Math.floor(Math.random() * 500000) + 1000; // Random amount between 1000-500000 RWF
+                const sign = type === 'incoming' ? '+' : '-';
+                
+                transactions.push({
+                    id: `TXN-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}-${i.toString().padStart(4, '0')}`,
+                    date: date.toISOString().split('T')[0],
+                    type: type.charAt(0).toUpperCase() + type.slice(1),
+                    amount: `${sign}${amount.toLocaleString()} RWF`,
+                    description: `${descriptions[Math.floor(Math.random() * descriptions.length)]} ${Math.floor(Math.random() * 1000)}`,
+                    status: Math.random() > 0.1 ? 'Completed' : 'Failed'
+                });
+            }
+            
+            return transactions;
+        }
+
+        // Store transactions in memory
+        const allTransactions = generateTransactionData();
+
+        // Pagination variables
+        let currentPage = 1;
+        const recordsPerPage = 50; // Show 50 records per page
+
+        // Function to render transactions for current page
+        function renderTransactions() {
+            const startIndex = (currentPage - 1) * recordsPerPage;
+            const endIndex = startIndex + recordsPerPage;
+            const pageTransactions = allTransactions.slice(startIndex, endIndex);
+            
+            const tbody = document.getElementById('transactionBody');
+            tbody.innerHTML = '';
+            
+            pageTransactions.forEach(txn => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${txn.date}</td>
+                    <td>${txn.type}</td>
+                    <td>${txn.amount}</td>
+                    <td>${txn.description}</td>
+                    <td><button class="action-btn" data-id="${txn.id}">Details</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Update page info
+            document.getElementById('pageInfo').textContent = 
+                `Page ${currentPage} of ${Math.ceil(allTransactions.length / recordsPerPage)}`;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = 
+                currentPage === Math.ceil(allTransactions.length / recordsPerPage);
+            
+            // Reattach event listeners to new buttons
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.addEventListener('click', showTransactionDetails);
+            });
+        }
+
+        // Function to show transaction details in modal
+        function showTransactionDetails(e) {
+            const txnId = e.target.getAttribute('data-id');
+            const txn = allTransactions.find(t => t.id === txnId);
+            
+            if (txn) {
+                const modalBody = document.getElementById('modalBody');
+                modalBody.innerHTML = `
+                    <div style="display: grid; gap: 20px;">
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px;">
+                            <div>
+                                <h3 style="font-size: 1.8rem; color: ${txn.amount.startsWith('+') ? 'var(--success)' : 'var(--danger)'}; margin-bottom: 5px;">
+                                    ${txn.amount}
+                                </h3>
+                                <p style="color: var(--gray);">${txn.type} Transaction</p>
+                            </div>
+                            <div style="background-color: ${txn.status === 'Completed' ? 'rgba(0, 200, 83, 0.1)' : 'rgba(255, 61, 0, 0.1)'}; 
+                                padding: 10px 15px; border-radius: 6px; 
+                                color: ${txn.status === 'Completed' ? 'var(--success)' : 'var(--danger)'}; 
+                                font-weight: 500;">
+                                ${txn.status}
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <p style="color: var(--gray); font-size: 0.9rem;">Transaction ID</p>
+                                <p style="font-weight: 500;">${txn.id}</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--gray); font-size: 0.9rem;">Date</p>
+                                <p style="font-weight: 500;">${txn.date}</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--gray); font-size: 0.9rem;">Type</p>
+                                <p style="font-weight: 500;">${txn.type}</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--gray); font-size: 0.9rem;">Reference</p>
+                                <p style="font-weight: 500;">${txn.description}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('modal').classList.add('active');
+            }
+        }
+
+        // Initialize pagination buttons
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTransactions();
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentPage < Math.ceil(allTransactions.length / recordsPerPage)) {
+                currentPage++;
+                renderTransactions();
+            }
+        });
+
+        // Initialize search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            if (searchTerm.length > 2) {
+                const filtered = allTransactions.filter(txn => 
+                    txn.id.toLowerCase().includes(searchTerm) ||
+                    txn.amount.toLowerCase().includes(searchTerm) ||
+                    txn.description.toLowerCase().includes(searchTerm)
+                );
+                renderFilteredTransactions(filtered);
+            } else {
+                renderTransactions();
+            }
+        });
+
+        // Function to render filtered transactions
+        function renderFilteredTransactions(filteredTransactions) {
+            const tbody = document.getElementById('transactionBody');
+            tbody.innerHTML = '';
+            
+            filteredTransactions.forEach(txn => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${txn.date}</td>
+                    <td>${txn.type}</td>
+                    <td>${txn.amount}</td>
+                    <td>${txn.description}</td>
+                    <td><button class="action-btn" data-id="${txn.id}">Details</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Update pagination info for filtered results
+            document.getElementById('pageInfo').textContent = 
+                `Showing ${filteredTransactions.length} results`;
+            
+            // Disable pagination buttons when filtering
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            
+            // Reattach event listeners
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.addEventListener('click', showTransactionDetails);
+            });
+        }
+
+        // Initialize type filter
+        document.getElementById('typeFilter').addEventListener('change', (e) => {
+            const type = e.target.value;
+            if (type) {
+                const filtered = allTransactions.filter(txn => 
+                    txn.type.toLowerCase() === type.toLowerCase()
+                );
+                renderFilteredTransactions(filtered);
+            } else {
+                renderTransactions();
+            }
+        });
+
+        // Initialize date filter
+        document.getElementById('dateFilter').addEventListener('change', (e) => {
+            const date = e.target.value;
+            if (date) {
+                const filtered = allTransactions.filter(txn => 
+                    txn.date === date
+                );
+                renderFilteredTransactions(filtered);
+            } else {
+                renderTransactions();
+            }
+        });
+
         // View Navigation
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', function() {
@@ -934,14 +1072,6 @@
         // Modal functionality
         const modal = document.getElementById('modal');
         const closeBtn = document.querySelector('.close');
-        const actionBtns = document.querySelectorAll('.action-btn');
-
-        // Open modal when action button is clicked
-        actionBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                modal.classList.add('active');
-            });
-        });
 
         // Close modal when X is clicked
         closeBtn.addEventListener('click', () => {
@@ -955,15 +1085,10 @@
             }
         });
 
-        // Initialize charts (placeholder - actual implementation would use Chart.js)
-        function initializeCharts() {
-            console.log('Charts initialized');
-            // Actual chart initialization would go here
-        }
-
         // Initialize the dashboard
         window.addEventListener('DOMContentLoaded', () => {
-            initializeCharts();
+            renderTransactions();
+            // initializeCharts(); // Uncomment when implementing charts
         });
     </script>
 </body>
