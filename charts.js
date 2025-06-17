@@ -195,6 +195,72 @@ function initializeCharts() {
             });
         }
 
+        const typeAnalyticsCtx = document.getElementById('typeAnalyticsChart');
+        if (typeAnalyticsCtx) {
+            charts.typeAnalyticsChart = new Chart(typeAnalyticsCtx, {
+                type: 'bar',
+                data: typeAnalytics,
+                options: {
+                    ...defaultOptions,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#64748b',
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            },
+                            grid: {
+                                color: '#e2e8f0'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#64748b'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        const amountCtx = document.getElementById('amountChart');
+        if (amountCtx) {
+            charts.amountChart = new Chart(amountCtx, {
+                type: 'bar',
+                data: amountDistribution,
+                options: {
+                    ...defaultOptions,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#64748b',
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            },
+                            grid: {
+                                color: '#e2e8f0'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#64748b'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         console.log('All charts initialized successfully');
         
     } catch (error) {

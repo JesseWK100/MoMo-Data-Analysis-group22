@@ -39,6 +39,24 @@ let agentPerformance = {
     }]
 };
 
+let typeAnalytics = {
+    labels: [],
+    datasets: [{
+        label: 'Transaction Types',
+        data: [],
+        backgroundColor: ['#1e3a8a', '#22c55e', '#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#8b5cf6']
+    }]
+};
+
+let amountDistribution = {
+    labels: ['0-10K', '10K-50K', '50K-100K', '100K-500K', '500K+'],
+    datasets: [{
+        label: 'Amount Distribution',
+        data: [0, 0, 0, 0, 0],
+        backgroundColor: '#1e3a8a'
+    }]
+};
+
 async function loadDataAndStartApp() {
     try {
         console.log("🔄 Loading data from API...");
@@ -126,35 +144,53 @@ function showErrorMessage(error) {
 function computeAndRenderCharts(data) {
     console.log("📈 Computing chart data...");
     
- 
     const typeMap = {};
     const monthlyMap = {};
     const dailyMap = {};
     const agentMap = {};
+    const amountRanges = {
+        '0-10K': 0,
+        '10K-50K': 0,
+        '50K-100K': 0,
+        '100K-500K': 0,
+        '500K+': 0
+    };
 
     data.forEach(tx => {
         try {
             const date = new Date(tx.date);
             const month = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}`;
             const day = date.toISOString().split("T")[0];
+            const amount = tx.amount || 0;
 
             const type = tx.transaction_type || 'Unknown';
-
             typeMap[type] = (typeMap[type] || 0) + 1;
 
-    
-            monthlyMap[month] = (monthlyMap[month] || 0) + (tx.amount || 0);
+            // Categorize amount into ranges
+            if (amount <= 10000) amountRanges['0-10K']++;
+            else if (amount <= 50000) amountRanges['10K-50K']++;
+            else if (amount <= 100000) amountRanges['50K-100K']++;
+            else if (amount <= 500000) amountRanges['100K-500K']++;
+            else amountRanges['500K+']++;
 
-            dailyMap[day] = (dailyMap[day] || 0) + (tx.amount || 0);
+            monthlyMap[month] = (monthlyMap[month] || 0) + amount;
+            dailyMap[day] = (dailyMap[day] || 0) + amount;
 
             if (type.toLowerCase().includes("agent") || type.toLowerCase().includes("withdrawal")) {
                 const agentName = tx.party || "Unknown Agent";
-                agentMap[agentName] = (agentMap[agentName] || 0) + (tx.amount || 0);
+                agentMap[agentName] = (agentMap[agentName] || 0) + amount;
             }
         } catch (error) {
             console.warn("Error processing transaction:", tx, error);
         }
     });
+
+    // Update type analytics data
+    typeAnalytics.labels = Object.keys(typeMap);
+    typeAnalytics.datasets[0].data = Object.values(typeMap);
+
+    // Update amount distribution data
+    amountDistribution.datasets[0].data = Object.values(amountRanges);
 
     typeDistribution.labels = Object.keys(typeMap);
 
@@ -184,6 +220,7 @@ function computeAndRenderCharts(data) {
     console.log("Types:", typeDistribution.labels);
     console.log("Months:", monthlyData.labels);
     console.log("Agents:", agentPerformance.labels);
+    console.log("Amount Ranges:", amountRanges);
 }
 
 document.addEventListener("DOMContentLoaded", function() {
