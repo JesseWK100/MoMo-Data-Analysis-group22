@@ -33,6 +33,12 @@ def categorize_of_message(message):
         return "Bank Transfers"
     elif "transfer to" in msg or "sent to" in msg:
         return "Transfers to Mobile Numbers"
+    elif "*165*s*" in msg.lower() and "transferred to" in msg.lower():
+        return "Transfers to Mobile Numbers"
+    elif "*164*s*" in msg.lower() and "transaction of" in msg.lower():
+        return "Direct Payments"
+    elif "bundle" in msg.lower() or "pack" in msg.lower():
+        return "Bundle Purchases"
     else:
         return "Uncategorized"
 
