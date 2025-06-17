@@ -6,6 +6,7 @@
     <title>MTN MoMo Transaction Dashboard</title>
     <link rel="icon" type="image/png" href="./Assets/New-mtn-logo.jpg">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #FFC72C; /* MTN Yellow */
@@ -1088,8 +1089,11 @@
         // Initialize the dashboard
         window.addEventListener('DOMContentLoaded', () => {
             renderTransactions();
-            // initializeCharts(); // Uncomment when implementing charts
+            initializeCharts();
         });
     </script>
+    <script src="data.js"></script>
+    <script src="charts.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
