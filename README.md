@@ -5,7 +5,7 @@
 - *Samuel Ihimbazwe* - [s.ihimbazwe@alustudent.com](mailto:s.ihimbazwe@alustudent.com)
 - *Jesse Walusansa* - [j.walusansa@alustudent.com](mailto:j.walusansa@alustudent.com)
 - *Andrew Ogayo* - [a.ogayo@alustudent.com](mailto:a.ogayo@alustudent.com)
-- *Ntare Allan* - [a.ntare@alustudent.com](mailto:a.ntare@alustudent.com)
+- *NTARE GAMA Allan* - [a.ntare@alustudent.com](mailto:a.ntare@alustudent.com)
 
 ## Project Overview
 This project focuses on the analysis of Mobile Money (MoMo) data, providing insights and visualizations to understand patterns and trends in mobile money transactions. The analysis helps in understanding user behavior, transaction patterns, and identifying potential areas for service improvement.
@@ -112,3 +112,5 @@ momo-data-analysis/
 - ALU for providing the opportunity to work on this project
 - All contributors and team members
 - Open source community for the tools and libraries used
+
+WALKTHROUGH - https://drive.google.com/file/d/1aeA_d1cHHcX895Dq6jgy8tCipow-6Jrt/view?usp=drive_link
